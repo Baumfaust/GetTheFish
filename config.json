@@ -1,1 +1,1 @@
-{"py/object": "getthefish.FishConfig", "bobbercolor": {"py/tuple": [72, 41, 12]}, "jumpToBobber": false, "thresholdBobber": 18, "thresholdCatch": 0, "verbose": false}
+{"py/object": "getthefish.FishConfig", "bobbercolor": {"py/tuple": [72, 41, 12]}, "endPos": {"py/object": "getthefish.Point", "x": 1100, "y": 400}, "jumpToBobber": true, "startPos": {"py/object": "getthefish.Point", "x": 200, "y": 50}, "thresholdBobber": 18, "thresholdCatch": 60, "verbose": false}

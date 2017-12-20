@@ -4,11 +4,11 @@ __author__ = 'Baumfaust'
 
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QRubberBand, QWidget, QLabel, QHBoxLayout
-from PyQt5.QtCore import QRect, QThread, pyqtSignal
+from PyQt5.QtCore import QRect, QThread, pyqtSignal, QSize, Qt
 from PyQt5.QtGui import QPixmap, QImage, QColor
 
 from ui_main import Ui_MainWindow
-from getthefish import GetTheFish
+from getthefish import GetTheFish, Point
 
 class ThreadRunner(QThread):
     def __init__(self, object):
@@ -47,11 +47,46 @@ class ScreenshotWidget(QWidget):
         self.colorPicked.emit()
 
 
+class SelectAreaWidget(QLabel):
+    areaSelected = pyqtSignal()
+
+    def __init__(self):
+        super(SelectAreaWidget, self).__init__()
+        self.rubberBand = None
+        pixmap = QApplication.primaryScreen().grabWindow(0)
+        self.setPixmap(pixmap)
+        self.showFullScreen()
+        self.show()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.RightButton:
+            if self.rubberBand:
+                self.rubberBand.hide()
+            self.close()
+        if event.button() == Qt.LeftButton:
+            self.origin = event.pos()
+            if not self.rubberBand:
+                self.rubberBand = QRubberBand(QRubberBand.Rectangle, None)
+            self.rubberBand.setGeometry(QRect(self.origin, QSize()))
+            self.rubberBand.show()
+
+    def mouseMoveEvent(self, event):
+        if self.rubberBand:
+            self.rubberBand.setGeometry(QRect(self.origin, event.pos()).normalized())
+
+    def mouseReleaseEvent(self, event):
+        if self.rubberBand:
+            self.destination = event.pos()
+            self.areaSelected.emit()
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        self.selectAreaWidget = None
 
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
         self.screenshotWidget = None
@@ -61,28 +96,41 @@ class MainWindow(QMainWindow):
 
         self.fish = GetTheFish()
         self.fish.gui = True
+        self.updateGui()
         self.thread = ThreadRunner(self.fish)
+
+        # connects
         self.ui.colorButton.clicked.connect(self.openScreenshot)
         self.ui.startButton.clicked.connect(self.toggleFishing)
+        self.ui.areaButton.clicked.connect(self.take_screenshot)
         self.ui.thresholdBobberSpinBox.valueChanged.connect(self.guiUpdated)
         self.ui.thresholdCatchSpinBox.valueChanged.connect(self.guiUpdated)
         self.ui.jumpToBobberCheck.stateChanged.connect(self.guiUpdated)
         self.ui.verboseCheck.stateChanged.connect(self.guiUpdated)
-        self.updateGui()
 
 
     def updateGui(self):
         self.ui.thresholdBobberSpinBox.setValue(self.fish.fishConfig.thresholdBobber)
         self.ui.thresholdCatchSpinBox.setValue(self.fish.fishConfig.thresholdCatch)
-        print("updateGui " + str(self.fish.fishConfig.jumpToBobber))
         self.ui.jumpToBobberCheck.setChecked(self.fish.fishConfig.jumpToBobber)
         self.ui.verboseCheck.setChecked(self.fish.fishConfig.verbose)
+        self.ui.posStartLabel.setText(
+            str(self.fish.fishConfig.startPos.x) + ", " + str(self.fish.fishConfig.startPos.y))
+        self.ui.posEndLabel.setText(
+            str(self.fish.fishConfig.endPos.x) + ", " + str(self.fish.fishConfig.endPos.y))
 
     def guiUpdated(self):
         self.fish.fishConfig.thresholdBobber = self.ui.thresholdBobberSpinBox.value()
         self.fish.fishConfig.thresholdCatch = self.ui.thresholdCatchSpinBox.value()
         self.fish.fishConfig.jumpToBobber = self.ui.jumpToBobberCheck.isChecked()
         self.fish.fishConfig.verbose = self.ui.verboseCheck.isChecked()
+        if self.selectAreaWidget:
+            self.fish.fishConfig.startPos = Point(self.selectAreaWidget.origin.x(), self.selectAreaWidget.origin.y())
+            self.fish.fishConfig.endPos = Point(self.selectAreaWidget.destination.x(), self.selectAreaWidget.destination.y())
+            self.ui.posStartLabel.setText(
+                str(self.fish.fishConfig.startPos.x) + ", " + str(self.fish.fishConfig.startPos.y))
+            self.ui.posEndLabel.setText(
+                str(self.fish.fishConfig.endPos.x) + ", " + str(self.fish.fishConfig.endPos.y))
         self.fish.save()
 
     def toggleFishing(self):
@@ -102,28 +150,9 @@ class MainWindow(QMainWindow):
         self.screenshotWidget = ScreenshotWidget()
         self.screenshotWidget.colorPicked.connect(self.bobberColorPicked)
 
-
-
-
-    # def mousePressEvent(self, event):
-    #     self.origin = event.pos()
-    #     if not self.rubberBand:
-    #         self.rubberBand = QRubberBand(QRubberBand.Rectangle, None)
-    #     self.rubberBand.setGeometry(QRect(self.origin, QSize()))
-    #     self.rubberBand.show()
-    #
-    # def mouseMoveEvent(self, event):
-    #     if self.rubberBand:
-    #         self.rubberBand.setGeometry(QRect(self.origin, event.pos()).normalized())
-
-        #super(PieView, self).mouseMoveEvent(event)
-
-    # def mouseReleaseEvent(self, event):
-    #     #super(PieView, self).mouseReleaseEvent(event)
-    #
-    #     if self.rubberBand:
-    #         self.rubberBand.hide()
-
+    def take_screenshot(self):
+        self.selectAreaWidget = SelectAreaWidget()
+        self.selectAreaWidget.areaSelected.connect(self.guiUpdated)
 
 sys._excepthook = sys.excepthook
 

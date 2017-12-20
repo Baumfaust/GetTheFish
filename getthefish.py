@@ -3,16 +3,9 @@ import time
 import pyautogui
 import random
 import jsonpickle
+import json
 
-startPos = (200, 50)
-endPos = (1100, 400)
 
-offset = (0,-5)
-
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
 
 
 def checkColor(color1, color2, delta):
@@ -24,6 +17,12 @@ def checkColor(color1, color2, delta):
         return False
 
 
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class FishConfig():
     def __init__(self):
         self.jumpToBobber = True
@@ -31,6 +30,8 @@ class FishConfig():
         self.thresholdBobber = 18
         self.thresholdCatch = 60
         self.bobbercolor = (72, 41, 12)
+        self.startPos = Point(200, 50)
+        self.endPos = Point(1100, 400)
 
 
 class GetTheFish():
@@ -39,12 +40,14 @@ class GetTheFish():
         self.run = True
         self.gui = False
         self.fishConfig = FishConfig()
-        #self.save()
+        print(self.fishConfig.__dict__)
+        #print(json.dumps(self.fishConfig.__dict__))
+        self.save()
         self.load()
-        print("init "+ str(self.fishConfig.jumpToBobber))
 
     def save(self):
         with open('config.json', 'w') as file:
+            jsonpickle.set_encoder_options('simplejson', sort_keys=True, indent=4)
             file.write(jsonpickle.encode(self.fishConfig))
 
     def load(self):
@@ -53,15 +56,15 @@ class GetTheFish():
             self.fishConfig = jsonpickle.decode(content)
 
     def log(self, text):
-        if self.verbose:
+        if self.fishConfig.verbose:
             print(text)
 
     def findbobber(self):
         self.log("Searching for bobber")
         image = ImageGrab.grab()
         image.save("test.png")
-        for y in range(startPos[1], endPos[1]):
-            for x in range(startPos[0], endPos[0]):
+        for y in range(self.fishConfig.startPos.y, self.fishConfig.endPos.y):
+            for x in range(self.fishConfig.startPos.x, self.fishConfig.endPos.x):
                 color = image.getpixel((x, y))
                 if checkColor(color, self.fishConfig.bobbercolor, self.fishConfig.thresholdBobber):
                     end = time.time()
@@ -77,7 +80,7 @@ class GetTheFish():
         image = ImageGrab.grab(bbox=(bobberPos.x, bobberPos.y, bobberPos.x + 1, bobberPos.y + 1))
         colorPosition = image.getpixel((0, 0))
 
-        while (fishtime < 20):
+        while (fishtime < 20 and self.run):
             image = ImageGrab.grab(bbox=(bobberPos.x, bobberPos.y, bobberPos.x + 1, bobberPos.y + 1))
             color = image.getpixel((0, 0))
             if not checkColor(color, colorPosition, self.fishConfig.thresholdCatch):
@@ -93,7 +96,7 @@ class GetTheFish():
     def fishing(self):
         while (self.run):
             self.save()
-            pyautogui.moveTo(startPos[0], startPos[1])
+            pyautogui.moveTo(self.fishConfig.startPos.x, self.fishConfig.startPos.y)
             # pyautogui.press('1')
             pyautogui.click(button='right')
             pyautogui.click(button='right')
@@ -115,9 +118,12 @@ class GetTheFish():
                     self.log("Fish gone!")
 
                 time.sleep(2)
+        self.log("Stopped fishing")
 
 
 if __name__ == '__main__':
+    fish = GetTheFish()
+    fish.run()
     #bobbercolor = (105,108,127)
 
     # time.sleep(5)
@@ -131,12 +137,12 @@ if __name__ == '__main__':
     # print(color)
     # sys.exit(0)
 
-    time.sleep(3)
-    pyautogui.moveTo(startPos[0], startPos[1])
-    time.sleep(2)
-    pyautogui.moveTo(endPos[0], endPos[1])
-    pyautogui.moveTo(endPos[0], endPos[1])
-    time.sleep(2)
+    # time.sleep(3)
+    # pyautogui.moveTo(startPos[0], startPos[1])
+    # time.sleep(2)
+    # pyautogui.moveTo(endPos[0], endPos[1])
+    # pyautogui.moveTo(endPos[0], endPos[1])
+    # time.sleep(2)
 
 
 
