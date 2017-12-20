@@ -1,0 +1,1 @@
+{"py/object": "getthefish.FishConfig", "bobbercolor": {"py/tuple": [72, 41, 12]}, "jumpToBobber": false, "thresholdBobber": 18, "thresholdCatch": 0, "verbose": false}
