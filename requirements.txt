@@ -1,0 +1,11 @@
+# Core dependencies for Get The Fish
+pyautogui>=0.9.54
+jsonpickle>=4.1.3
+PyQt5>=5.15.11
+numpy>=1.24.0
+scikit-image>=0.22.0
+mss>=10.0.0
+
+# Testing dependencies
+pytest>=7.0.0
+pytest-mock>=3.10.0
