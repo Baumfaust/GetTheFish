@@ -4,11 +4,16 @@ import random
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import mss
 import numpy as np
-import pyautogui
+
+# pyautogui requires a running X11 display and is only needed at runtime
+try:
+    import pyautogui
+except Exception:
+    pyautogui = None
 
 # Configure logging
 logging.basicConfig(
@@ -40,8 +45,9 @@ class FishConfig:
         thresholdBobber: int = 18,
         thresholdCatch: int = 60,
         bobbercolor: Tuple[int, int, int] = (72, 41, 12),
-        startPos: Optional[Point] = None,
-        endPos: Optional[Point] = None,
+        area_x: int = 100,
+        area_y: int = 100,
+        threshold: int = 30,
         max_attempts: int = 50,
     ):
         self.jumpToBobber = jumpToBobber
@@ -49,9 +55,27 @@ class FishConfig:
         self.thresholdBobber = thresholdBobber
         self.thresholdCatch = thresholdCatch
         self.bobbercolor = bobbercolor
-        self.startPos = startPos or Point(200, 50)
+        self.startPos = Point(area_x, area_y)
         self.endPos = endPos or Point(1100, 400)
         self.max_attempts = max_attempts
+
+    @property
+    def bobber_color(self):
+        """Backwards-compatible alias for bobbercolor (as a list)."""
+        return list(self.bobbercolor)
+
+    def __getitem__(self, key: str):
+        """Allow dict-like access to config fields."""
+        mapping = {
+            "bobber_color": self.bobber_color,
+            "area_x": self.startPos.x,
+            "area_y": self.startPos.y,
+            "threshold": self.thresholdBobber,
+            "max_attempts": self.max_attempts,
+        }
+        if key not in mapping:
+            raise KeyError(key)
+        return mapping[key]
 
     def to_dict(self) -> dict:
         """Convert config to dictionary for JSON serialization."""
@@ -69,17 +93,44 @@ class FishConfig:
     @classmethod
     def from_dict(cls, data: dict) -> "FishConfig":
         """Create FishConfig from dictionary."""
-        start_pos = Point(data["startPos"]["x"], data["startPos"]["y"])
-        end_pos = Point(data["endPos"]["x"], data["endPos"]["y"])
+        # Map snake_case keys to camelCase internal fields
+        mapping = {
+            "bobber_color": "bobbercolor",
+            "area_x": "area_x",
+            "area_y": "area_y",
+            "threshold": "thresholdBobber",
+            "max_attempts": "max_attempts",
+        }
+        mapped: dict = {}
+        for k, v in data.items():
+            camel_key = mapping.get(k, k)
+            mapped[camel_key] = v
+        
+        # Safely extract fields with defaults
+        start_pos = Point(
+            mapped.get("startPos", {}).get("x") if isinstance(mapped.get("startPos"), dict) else mapped.get("area_x"),
+            mapped.get("startPos", {}).get("y") if isinstance(mapped.get("startPos"), dict) else mapped.get("area_y"),
+        )
+        end_pos = Point(
+            mapped.get("endPos", {}).get("x") if isinstance(mapped.get("endPos"), dict) else mapped.get("area_x"),
+            mapped.get("endPos", {}).get("y") if isinstance(mapped.get("endPos"), dict) else mapped.get("area_y"),
+        )
+        # Fallback: use area_x/area_y if startPos not found
+        if start_pos.x is None or start_pos.y is None:
+            start_pos = Point(
+                mapped.get("area_x", 100),
+                mapped.get("area_y", 100),
+            )
+            
         return cls(
-            jumpToBobber=data.get("jumpToBobber", True),
-            verbose=data.get("verbose", False),
-            thresholdBobber=data.get("thresholdBobber", 18),
-            thresholdCatch=data.get("thresholdCatch", 60),
-            bobbercolor=tuple(data.get("bobbercolor", (72, 41, 12))),
+            jumpToBobber=mapped.get("jumpToBobber", True),
+            verbose=mapped.get("verbose", False),
+            thresholdBobber=mapped.get("thresholdBobber", 18),
+            thresholdCatch=mapped.get("thresholdCatch", 60),
+            bobbercolor=tuple(mapped.get("bobbercolor", (72, 41, 12))),
             startPos=start_pos,
             endPos=end_pos,
-            max_attempts=data.get("max_attempts", 50),
+            max_attempts=mapped.get("max_attempts", 50),
         )
 
     def save(self, path: Optional[Path] = None) -> None:
@@ -90,9 +141,33 @@ class FishConfig:
         logger.debug(f"Config saved to {path}")
 
     @classmethod
-    def load(cls, path: Optional[Path] = None) -> "FishConfig":
-        """Load config from JSON file."""
-        path = path or cls.CONFIG_FILE
+    def load(cls, path: Union[Path, str, dict, None] = None) -> "FishConfig":
+        """Load config from a JSON file path, a JSON string, or a dict.
+
+        Accepts:
+          - None: use the default CONFIG_FILE (or defaults if missing).
+          - Path/str: read the JSON file at that location.
+          - dict: use the dict directly as config data.
+          - str that is valid JSON: parse it as JSON.
+        """
+        # Direct dict input
+        if isinstance(path, dict):
+            return cls.from_dict(path)
+
+        # JSON string input
+        if isinstance(path, str):
+            stripped = path.strip()
+            if stripped.startswith("{"):
+                try:
+                    data = json.loads(path)
+                    logger.info("Config loaded from JSON string")
+                    return cls.from_dict(data)
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse JSON string: {e}. Using defaults.")
+                    return cls()
+            # Otherwise treat as a file path
+
+        path = Path(path) if path else cls.CONFIG_FILE
         if not path.exists():
             logger.info(f"No config file found at {path}, using defaults")
             return cls()
@@ -120,7 +195,8 @@ class GetTheFish:
 
     def __init__(self, config: Optional[FishConfig] = None):
         # Re-enable failsafe for safety (Ctrl+Alt+Del or move mouse to corner)
-        pyautogui.FAILSAFE = True
+        if pyautogui is not None:
+            pyautogui.FAILSAFE = True
 
         self.run = True
         self.gui = False
