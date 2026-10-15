@@ -1,126 +1,164 @@
 # Get The Fish
 
-An automated fishing tool written in Python. It automates the fishing process: it casts a line, searches for the bobber using color detection, detects when a fish bites, and automatically reels it in.
+[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
-The project consists of:
-- **`getthefish.py`** — core tool logic: cast, find bobber by color, wait for a bite, and catch the fish.
-- **`ui.py`** — PyQt5 graphical user interface (built from `main.ui` via `ui_main.py`) for configuring the tool.
-- **`colorcompare.py`** — color-difference utility using `numpy` and `scikit-image` (CIE76 delta-E).
+An automated fishing tool. It casts the line, finds the bobber by its colour,
+watches it for a bite and reels the fish in. A small PyQt5 GUI lets you pick
+the bobber colour and the search area directly on screen.
 
-## Features
+> **Note:** The tool moves the mouse and reads the screen. Only use it where
+> automation is allowed by the game's terms of service.
 
-- Automatic fishing loop (cast → bobber detection → bite detection → catch)
-- Color-based bobber detection (default bobber color: `(72, 41, 12)`, threshold: `18`)
-- Customizable fishing area, thresholds, and logging
-- GUI to pick the bobber color and set the fishing area
+## Requirements
 
-## Prerequisites
+- Python 3.11 or newer
+- Windows (primary target). Linux/macOS work for development; on macOS the
+  terminal needs *Screen Recording* and *Accessibility* permissions.
 
-- Python 3.x
-- A Windows-based display (screen capture and mouse automation are used)
+## Installation
 
-## Project Structure
-
-```
-GetTheFish/
-├── getthefish.py    # Core fishing tool logic
-├── ui.py            # PyQt5 GUI wrapper
-├── ui_main.py       # Auto-generated UI from main.ui
-├── main.ui          # Qt Designer UI file
-├── colorcompare.py  # Color comparison utility
-├── config.json      # tool configuration
-├── test.png         # Sample screenshot (bobber snapshot)
-└── README.md        # This file
-```
-
-## Running with a Virtual Environment (Windows)
-
-### 1. Open Command Prompt
-
-- Press `Win + R`, type `cmd`, and press **Enter**.
-- Navigate to the project directory:
+### Windows (Command Prompt or PowerShell)
 
 ```cmd
-cd C:\path\to\GetTheFish
+git clone <repository-url> GetTheFish
+cd GetTheFish
+py -m venv .venv
+.venv\Scripts\activate
+pip install .
+getthefish-gui
 ```
 
-### 2. Create a Virtual Environment
+If PowerShell refuses to run `activate` ("running scripts is disabled"), run
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use Command Prompt.
+
+Afterwards, starting it again only needs:
 
 ```cmd
-python -m venv venv
+cd GetTheFish
+.venv\Scripts\activate
+getthefish-gui
 ```
 
-### 3. Activate the Virtual Environment
+### Linux / macOS
 
-```cmd
-venv\Scripts\activate
+```bash
+git clone <repository-url> GetTheFish
+cd GetTheFish
+python3 -m venv .venv
+source .venv/bin/activate
+pip install .
+getthefish-gui
 ```
 
-You should see `(venv)` appear in your prompt.
+Prebuilt Windows executables are attached to each
+[GitHub release](../../releases).
 
-### 4. Install Dependencies
+## Usage
 
-```cmd
-pip install pyscreenshot pyautogui jsonpickle PyQt5 numpy scikit-image
+```bash
+getthefish-gui      # GUI (recommended)
+getthefish          # headless, uses the saved config
+getthefish --help   # options: --config PATH, --verbose
 ```
 
-### 5. Run the Tool
+In the GUI:
 
-Start the GUI (recommended, for configuration):
+- **Set Area** – drag a rectangle over the water where the bobber lands. Esc or right-click cancels.
+- **Select Color** – click on the bobber in the frozen screenshot. Esc cancels.
+- **Cast Key** – the key the *Fishing* spell is on in your action bar (default `0`).
+  Names follow pyautogui: `0`–`9`, `a`–`z`, `f1`–`f12`, `num0`–`num9`, …
+- **Threshold Bobber / Threshold Catch** – per-channel RGB tolerance for finding the bobber and for detecting a bite.
+- **Jump to Bobber** – keep the cursor on the bobber while waiting; otherwise it returns to where it was after reeling in.
+- **Start / Stop** – run the fishing loop in the background.
 
-```cmd
-python ui.py
-```
-
-Or run the core tool directly:
-
-```cmd
-python getthefish.py
-```
-
-### 6. Deactivate the Virtual Environment
-
-When finished:
-
-```cmd
-deactivate
-```
-
-## Running Without a Virtual Environment
-
-If you prefer not to use a virtual environment, install the dependencies globally:
-
-```cmd
-pip install pyscreenshot pyautogui jsonpickle PyQt5 numpy scikit-image
-python ui.py
-```
+To stop the headless version press **Ctrl+C**. In both modes moving the mouse
+into a screen corner triggers the emergency stop.
 
 ## Configuration
 
-All settings are saved in `config.json` (auto-created on first run):
+Settings are saved automatically to a per-user file:
+
+| OS | Location |
+| --- | --- |
+| Windows | `%APPDATA%\getthefish\config.json` |
+| macOS | `~/Library/Application Support/getthefish/config.json` |
+| Linux | `$XDG_CONFIG_HOME/getthefish/config.json` (default `~/.config/...`) |
+
+Set `GETTHEFISH_CONFIG` or pass `--config` to use another file. A
+`config.json` from older versions in the current directory is imported
+automatically on first start. See [`config.example.json`](config.example.json).
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `bobbercolor` | `[72, 41, 12]` | RGB color of the bobber |
-| `thresholdBobber` | `18` | Color tolerance for bobber detection |
-| `thresholdCatch` | `60` | Color tolerance for bite detection |
-| `jumpToBobber` | `true` | Move the cursor directly to the bobber |
-| `verbose` | `false` | Enable detailed logging |
-| `startPos` | `(200, 50)` | Top-left corner of the fishing area |
-| `endPos` | `(1100, 400)` | Bottom-right corner of the fishing area |
+| `bobber_color` | `[72, 41, 12]` | RGB colour of the bobber |
+| `threshold_bobber` | `18` | Tolerance (0–255) for finding the bobber |
+| `threshold_catch` | `60` | Tolerance (0–255) for detecting a bite |
+| `jump_to_bobber` | `true` | Keep the cursor on the bobber while waiting |
+| `verbose` | `false` | Log every step |
+| `start_pos` | `{"x": 200, "y": 50}` | Top-left corner of the search area (physical pixels) |
+| `end_pos` | `{"x": 1100, "y": 400}` | Bottom-right corner of the search area |
+| `max_attempts` | `3` | Screenshots taken per cast while looking for the bobber |
+| `cast_key` | `"0"` | Key bound to the Fishing spell |
 
-Use the GUI (in `ui.py`) to adjust the bobber color and fishing area interactively:
+### How a round works
 
-- **Set Area** — left-click to start and drag to define the fishing area; right-click to finish.
-- **Select Color** — click on the bobber in the screenshot to pick its color.
-- **Threshold Bobber / Threshold Catch** — adjust detection sensitivity.
-- **Start** — toggle the fishing loop on/off.
+1. **Cast** – left-click on the water (top-left corner of the area) to give the
+   game focus, then press `cast_key`. No addon is needed.
+2. Wait ~2.5 s, then search the area for the bobber colour.
+3. With *Jump to Bobber* the cursor moves onto the bobber (no click).
+4. Watch one bobber pixel for up to 20 s. When it changes by more than
+   `threshold_catch`, right-click the bobber to reel in.
+5. Wait 2 s and cast again. After 3 rounds in a row without a bobber the bot stops.
 
-## Notes
+In the game, enable **Auto Loot** (Interface → Controls) so the catch is looted
+by the right-click.
 
-- The script uses screen capture and mouse control, so run it only on a trusted/authorized game session.
-- Adjust the bobber color and thresholds in the GUI to match your game's colors for optimal performance.
+## Troubleshooting
+
+Enable **verbose** in the GUI (or run `getthefish -v`) and check the log file
+`getthefish.log` in the same folder as `config.json`. Each cast logs, for example:
+
+```
+Bobber found at 640, 212
+Watching pixel 643, 217 with colour (74, 40, 13)
+No bite within 20s: largest colour change was 41, threshold_catch is 60
+```
+
+- **Set the area over water only.** Dark wood (boat), the character and UI
+  bars contain the same dark red/brown as the bobber; if they are inside the
+  area the bot locks onto them and never sees a bite.
+- **`threshold_catch` must be lower than the real change.** On a dark bobber
+  colour the pixel changes only ~45–50 when the bobber dips into the water,
+  so values of 60+ never fire. Around 30 works for the dark red feather.
+- **"Bobber not found"** – the colour or area is off. Pick the colour again on
+  the darkest part of the bobber, or raise `threshold_bobber`.
+- **"No bite ... largest colour change was X"** although a fish bit – `X` is
+  how much the pixel changed. Set `threshold_catch` a bit below that value
+  (but above the change you see when nothing happens, to avoid false catches).
+- **Cursor never moves (macOS)** – grant *Accessibility* and *Screen Recording*
+  permissions to your terminal.
+
+## Project structure
+
+```
+src/getthefish/
+├── __main__.py        # CLI entry point
+├── bot.py             # fishing loop (cast → find → wait → reel in)
+├── config.py          # config model, validation, persistence, migration
+├── detection.py       # pure numpy colour detection
+├── devices.py         # screen capture (mss) and mouse (pyautogui) adapters
+├── logs.py            # console + log file setup
+└── gui/
+    ├── main_window.py # PyQt5 GUI
+    ├── main.ui        # Qt Designer source
+    └── ui_main.py     # generated from main.ui
+tests/                 # pytest suite (no real screen or mouse needed)
+```
+
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the terms of the [LICENSE](LICENSE) file included in the repository.
+MIT – see [LICENSE](LICENSE).

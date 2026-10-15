@@ -1,0 +1,21 @@
+{
+    "bobber_color": [
+        72,
+        41,
+        12
+    ],
+    "threshold_bobber": 18,
+    "threshold_catch": 60,
+    "jump_to_bobber": true,
+    "verbose": false,
+    "start_pos": {
+        "x": 200,
+        "y": 50
+    },
+    "end_pos": {
+        "x": 1100,
+        "y": 400
+    },
+    "max_attempts": 3,
+    "cast_key": "0"
+}

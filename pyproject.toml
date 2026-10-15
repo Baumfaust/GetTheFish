@@ -1,0 +1,94 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "getthefish"
+dynamic = ["version"]
+description = "Colour-based fishing automation with a small PyQt5 GUI"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Baumfaust" }]
+requires-python = ">=3.11"
+dependencies = [
+    "mss>=10.0",
+    "numpy>=1.26",
+    "pyautogui>=0.9.54",
+    "PyQt5>=5.15.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.13",
+    "pip-audit>=2.7",
+    "pre-commit>=4.0",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "pytest-qt>=4.4",
+    "ruff>=0.8",
+]
+build = ["pyinstaller>=6.11"]
+
+[project.scripts]
+getthefish = "getthefish.__main__:main"
+
+[project.gui-scripts]
+getthefish-gui = "getthefish.gui.main_window:main"
+
+[tool.hatch.version]
+path = "src/getthefish/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/getthefish"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = "-ra --strict-markers --cov=getthefish --cov-report=term-missing"
+qt_api = "pyqt5"
+
+[tool.coverage.run]
+branch = true
+omit = ["*/gui/ui_main.py"]
+
+[tool.coverage.report]
+fail_under = 85
+exclude_also = ["if __name__ == .__main__.:", "raise NotImplementedError", "\\.\\.\\."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["src/getthefish/gui/ui_main.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "PT", "S"]
+ignore = [
+    "S101",   # assert is fine in tests and for type narrowing
+    "PT018",  # compound range assertions read better
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["getthefish", "helpers"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src", "tests"]
+mypy_path = ["tests"]
+exclude = ["src/getthefish/gui/ui_main\\.py$"]
+
+[[tool.mypy.overrides]]
+module = ["getthefish.gui.ui_main"]
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = ["test_gui"]
+disallow_untyped_calls = false  # pytest-qt's QtBot is untyped
+
+[[tool.mypy.overrides]]
+module = ["pyautogui", "mss"]
+ignore_missing_imports = true

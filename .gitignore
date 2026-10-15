@@ -100,3 +100,22 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# ruff
+.ruff_cache/
+
+# pytest
+.pytest_cache/
+
+# IDE / assistant metadata
+.junie/
+.vscode/
+
+# Local user config (see config.example.json)
+/config.json
+*.json.tmp
+
+# Local reference screenshots (may contain personal data, never commit)
+/bobber.png
+/GetTheFish3
+/*.png
