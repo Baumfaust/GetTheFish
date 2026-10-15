@@ -75,7 +75,7 @@ ignore = [
 known-first-party = ["getthefish", "helpers"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 files = ["src", "tests"]
 mypy_path = ["tests"]
@@ -90,5 +90,5 @@ module = ["test_gui"]
 disallow_untyped_calls = false  # pytest-qt's QtBot is untyped
 
 [[tool.mypy.overrides]]
-module = ["pyautogui", "mss"]
+module = ["pyautogui", "mss", "pytestqt.*"]
 ignore_missing_imports = true
