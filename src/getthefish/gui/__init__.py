@@ -1,1 +1,1 @@
-"""PyQt5 user interface."""
+"""PySide6 user interface."""

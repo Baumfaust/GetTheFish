@@ -8,9 +8,9 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
-from PyQt5.QtCore import QObject, QPoint, QRect, QSize, Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QCloseEvent, QColor, QKeyEvent, QMouseEvent, QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QMessageBox, QRubberBand, QWidget
+from PySide6.QtCore import QObject, QPoint, QRect, QSize, Qt, QThread, Signal
+from PySide6.QtGui import QCloseEvent, QColor, QKeyEvent, QMouseEvent, QPixmap
+from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QMessageBox, QRubberBand, QWidget
 
 from getthefish.bot import GetTheFish
 from getthefish.config import (
@@ -37,7 +37,7 @@ def default_bot_factory(config: FishConfig, on_status: Callable[[str], None]) ->
 class FishingWorker(QThread):
     """Runs one :class:`GetTheFish` instance in a background thread."""
 
-    status = pyqtSignal(str)
+    status = Signal(str)
 
     def __init__(self, factory: BotFactory, config: FishConfig, parent: QObject | None = None):
         super().__init__(parent)
@@ -65,7 +65,7 @@ class ScreenOverlay(QLabel):
         if pixmap is None:
             screen = QApplication.primaryScreen()
             assert screen is not None
-            pixmap = screen.grabWindow(0)  # type: ignore[arg-type]  # 0 = whole screen
+            pixmap = screen.grabWindow(0)  # 0 = whole screen
         self._pixmap = pixmap
         self._image = pixmap.toImage()
         self._ratio = pixmap.devicePixelRatio()
@@ -88,18 +88,18 @@ class ScreenOverlay(QLabel):
 class ColorPicker(ScreenOverlay):
     """Click a pixel to choose the bobber colour. Esc cancels."""
 
-    color_picked = pyqtSignal(tuple)
+    color_picked = Signal(tuple)
 
     def mousePressEvent(self, event: QMouseEvent | None) -> None:  # noqa: N802
         if event is not None and event.button() == Qt.MouseButton.LeftButton:
-            self.color_picked.emit(self.color_at(event.pos()))
+            self.color_picked.emit(self.color_at(event.position().toPoint()))
             self.close()
 
 
 class AreaSelector(ScreenOverlay):
     """Drag with the left button to choose the search area. Esc cancels."""
 
-    area_selected = pyqtSignal(object, object)
+    area_selected = Signal(object, object)
 
     def __init__(self, pixmap: QPixmap | None = None) -> None:
         super().__init__(pixmap)
@@ -110,7 +110,7 @@ class AreaSelector(ScreenOverlay):
         if event is None:
             return
         if event.button() == Qt.MouseButton.LeftButton:
-            self._origin = event.pos()
+            self._origin = event.position().toPoint()
             self._band.setGeometry(QRect(self._origin, QSize()))
             self._band.show()
         elif event.button() == Qt.MouseButton.RightButton:
@@ -118,12 +118,12 @@ class AreaSelector(ScreenOverlay):
 
     def mouseMoveEvent(self, event: QMouseEvent | None) -> None:  # noqa: N802
         if event is not None and self._origin is not None:
-            self._band.setGeometry(QRect(self._origin, event.pos()).normalized())
+            self._band.setGeometry(QRect(self._origin, event.position().toPoint()).normalized())
 
     def mouseReleaseEvent(self, event: QMouseEvent | None) -> None:  # noqa: N802
         if event is None or event.button() != Qt.MouseButton.LeftButton or self._origin is None:
             return
-        rect = QRect(self._origin, event.pos()).normalized()
+        rect = QRect(self._origin, event.position().toPoint()).normalized()
         self._origin = None
         self._band.hide()
         if rect.width() < 2 or rect.height() < 2:
@@ -285,7 +285,7 @@ class MainWindow(QMainWindow):
         self.overlay = overlay
         overlay.showFullScreen()
 
-    def closeEvent(self, event: QCloseEvent | None) -> None:  # noqa: N802
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
         if self.worker is not None:
             self.worker.stop()
             self.worker.wait(5000)
@@ -304,7 +304,7 @@ def main() -> int:
         return 2
     window = MainWindow(config, config_path)
     window.show()
-    return app.exec_()
+    return app.exec()
 
 
 if __name__ == "__main__":

@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-pytest.importorskip("PyQt5")
+pytest.importorskip("PySide6")
 pytest.importorskip("pytestqt")
 
-from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QColor, QPixmap
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QColor, QPixmap
 from pytestqt.qtbot import QtBot
 
 from getthefish.bot import GetTheFish

@@ -72,7 +72,7 @@ target/
 .ipynb_checkpoints
 
 # pyenv
-.python-version
+# Keep .python-version tracked: uv and CI use it as the project Python pin.
 
 # celery beat schedule file
 celerybeat-schedule

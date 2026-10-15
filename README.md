@@ -3,7 +3,7 @@
 [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
 An automated fishing tool. It casts the line, finds the bobber by its colour,
-watches it for a bite and reels the fish in. A small PyQt5 GUI lets you pick
+watches it for a bite and reels the fish in. A small PySide6 GUI lets you pick
 the bobber colour and the search area directly on screen.
 
 > **Note:** The tool moves the mouse and reads the screen. Only use it where
@@ -11,32 +11,20 @@ the bobber colour and the search area directly on screen.
 
 ## Requirements
 
-- Python 3.11 or newer
+- Python 3.12 or newer (Python 3.15 is the current project default)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) for installation and dependency management
 - Windows (primary target). Linux/macOS work for development; on macOS the
   terminal needs *Screen Recording* and *Accessibility* permissions.
 
 ## Installation
 
-### Windows (Command Prompt or PowerShell)
+### Windows (PowerShell)
 
-```cmd
+```powershell
 git clone <repository-url> GetTheFish
 cd GetTheFish
-py -m venv .venv
-.venv\Scripts\activate
-pip install .
-getthefish-gui
-```
-
-If PowerShell refuses to run `activate` ("running scripts is disabled"), run
-`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use Command Prompt.
-
-Afterwards, starting it again only needs:
-
-```cmd
-cd GetTheFish
-.venv\Scripts\activate
-getthefish-gui
+uv sync --locked
+uv run getthefish-gui
 ```
 
 ### Linux / macOS
@@ -44,11 +32,12 @@ getthefish-gui
 ```bash
 git clone <repository-url> GetTheFish
 cd GetTheFish
-python3 -m venv .venv
-source .venv/bin/activate
-pip install .
-getthefish-gui
+uv sync --locked
+uv run getthefish-gui
 ```
+
+`uv` creates the project environment and installs the pinned Python version and
+locked dependencies. To run the application later, use `uv run getthefish-gui`.
 
 Prebuilt Windows executables are attached to each
 [GitHub release](../../releases).
@@ -149,7 +138,7 @@ src/getthefish/
 ├── devices.py         # screen capture (mss) and mouse (pyautogui) adapters
 ├── logs.py            # console + log file setup
 └── gui/
-    ├── main_window.py # PyQt5 GUI
+    ├── main_window.py # PySide6 GUI
     ├── main.ui        # Qt Designer source
     └── ui_main.py     # generated from main.ui
 tests/                 # pytest suite (no real screen or mouse needed)
@@ -157,7 +146,19 @@ tests/                 # pytest suite (no real screen or mouse needed)
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Install all development and packaging tools, then run the checks with:
+
+```bash
+uv sync --locked --all-groups
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked mypy
+uv run --locked pytest
+uv lock --check
+uv build
+```
+
+`uv.lock` is the committed, cross-platform dependency lockfile.
 
 ## License
 
