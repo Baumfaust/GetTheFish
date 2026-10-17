@@ -9,8 +9,8 @@ import pytest
 pytest.importorskip("PySide6")
 pytest.importorskip("pytestqt")
 
-from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QColor, QPixmap
+from PySide6.QtCore import QPoint, Qt, QUrl
+from PySide6.QtGui import QColor, QDesktopServices, QPixmap
 from pytestqt.qtbot import QtBot
 
 from getthefish.bot import GetTheFish
@@ -34,9 +34,23 @@ def window(qtbot: QtBot, tmp_path: Path) -> MainWindow:
 def test_shows_config(window: MainWindow) -> None:
     assert window.ui.thresholdBobberSpinBox.value() == 18
     assert window.ui.thresholdCatchSpinBox.value() == 60
+    assert window.ui.thresholdBobberSpinBox.minimumWidth() >= 64
+    assert window.ui.thresholdCatchSpinBox.minimumWidth() >= 64
     assert window.ui.posStartLabel.text() == "200, 50"
     assert window.ui.posEndLabel.text() == "1100, 400"
     assert window.ui.hexColorLabel.text() == "#48290c"
+
+
+def test_open_config_folder(window: MainWindow, monkeypatch: pytest.MonkeyPatch) -> None:
+    opened: list[str] = []
+
+    def open_url(url: QUrl) -> bool:
+        opened.append(url.toLocalFile())
+        return True
+
+    monkeypatch.setattr(QDesktopServices, "openUrl", open_url)
+    window.ui.openConfigFolderButton.click()
+    assert opened == [str(window.config_path.parent.resolve())]
 
 
 def enter_cast_key(window: MainWindow, text: str) -> None:

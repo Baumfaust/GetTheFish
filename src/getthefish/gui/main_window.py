@@ -8,8 +8,8 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QPoint, QRect, QSize, Qt, QThread, Signal
-from PySide6.QtGui import QCloseEvent, QColor, QKeyEvent, QMouseEvent, QPixmap
+from PySide6.QtCore import QObject, QPoint, QRect, QSize, Qt, QThread, QUrl, Signal
+from PySide6.QtGui import QCloseEvent, QColor, QDesktopServices, QKeyEvent, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QMessageBox, QRubberBand, QWidget
 
 from getthefish.bot import GetTheFish
@@ -157,6 +157,7 @@ class MainWindow(QMainWindow):
         self.ui.startButton.clicked.connect(self.toggle_fishing)
         self.ui.areaButton.clicked.connect(self.select_area)
         self.ui.colorButton.clicked.connect(self.pick_color)
+        self.ui.openConfigFolderButton.clicked.connect(self.open_config_folder)
         self.ui.thresholdBobberSpinBox.valueChanged.connect(self.settings_changed)
         self.ui.thresholdCatchSpinBox.valueChanged.connect(self.settings_changed)
         self.ui.jumpToBobberCheck.stateChanged.connect(self.settings_changed)
@@ -235,6 +236,12 @@ class MainWindow(QMainWindow):
 
     def show_status(self, text: str) -> None:
         self.ui.statusbar.showMessage(text)
+
+    def open_config_folder(self) -> None:
+        """Open the directory containing config.json and the log file."""
+        folder_url = QUrl.fromLocalFile(str(self.config_path.parent.resolve()))
+        if not QDesktopServices.openUrl(folder_url):
+            self.show_status(f"Could not open folder: {self.config_path.parent}")
 
     def toggle_fishing(self) -> None:
         if self.is_fishing:

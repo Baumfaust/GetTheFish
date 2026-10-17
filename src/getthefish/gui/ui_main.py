@@ -105,8 +105,8 @@ class Ui_MainWindow(object):
         self.thresholdBobberSpinBox.setObjectName(u"thresholdBobberSpinBox")
         sizePolicy.setHeightForWidth(self.thresholdBobberSpinBox.sizePolicy().hasHeightForWidth())
         self.thresholdBobberSpinBox.setSizePolicy(sizePolicy)
-        self.thresholdBobberSpinBox.setMinimumSize(QSize(40, 0))
-        self.thresholdBobberSpinBox.setMaximumSize(QSize(40, 16777215))
+        self.thresholdBobberSpinBox.setMinimumSize(QSize(64, 0))
+        self.thresholdBobberSpinBox.setMaximumSize(QSize(64, 16777215))
 
         self.verticalLayout_2.addWidget(self.thresholdBobberSpinBox)
 
@@ -119,8 +119,8 @@ class Ui_MainWindow(object):
         self.thresholdCatchSpinBox.setObjectName(u"thresholdCatchSpinBox")
         sizePolicy.setHeightForWidth(self.thresholdCatchSpinBox.sizePolicy().hasHeightForWidth())
         self.thresholdCatchSpinBox.setSizePolicy(sizePolicy)
-        self.thresholdCatchSpinBox.setMinimumSize(QSize(40, 0))
-        self.thresholdCatchSpinBox.setMaximumSize(QSize(40, 16777215))
+        self.thresholdCatchSpinBox.setMinimumSize(QSize(64, 0))
+        self.thresholdCatchSpinBox.setMaximumSize(QSize(64, 16777215))
 
         self.verticalLayout_2.addWidget(self.thresholdCatchSpinBox)
 
@@ -177,6 +177,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addWidget(self.colorButton)
 
+        self.openConfigFolderButton = QPushButton(self.centralwidget)
+        self.openConfigFolderButton.setObjectName(u"openConfigFolderButton")
+
+        self.verticalLayout.addWidget(self.openConfigFolderButton)
+
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer)
@@ -217,4 +222,5 @@ class Ui_MainWindow(object):
         self.startButton.setText(QCoreApplication.translate("MainWindow", u"Start", None))
         self.areaButton.setText(QCoreApplication.translate("MainWindow", u"Set Area", None))
         self.colorButton.setText(QCoreApplication.translate("MainWindow", u"Select Color", None))
+        self.openConfigFolderButton.setText(QCoreApplication.translate("MainWindow", u"Open Config/Logs Folder", None))
     # retranslateUi

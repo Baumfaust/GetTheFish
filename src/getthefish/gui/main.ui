@@ -145,13 +145,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>40</width>
+          <width>64</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>40</width>
+          <width>64</width>
           <height>16777215</height>
          </size>
         </property>
@@ -174,13 +174,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>40</width>
+          <width>64</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>40</width>
+          <width>64</width>
           <height>16777215</height>
          </size>
         </property>
@@ -283,6 +283,13 @@
        <widget class="QPushButton" name="colorButton">
         <property name="text">
          <string>Select Color</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="openConfigFolderButton">
+        <property name="text">
+         <string>Open Config/Logs Folder</string>
         </property>
        </widget>
       </item>
