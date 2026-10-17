@@ -10,7 +10,7 @@ pytest.importorskip("PySide6")
 pytest.importorskip("pytestqt")
 
 from PySide6.QtCore import QPoint, Qt, QUrl
-from PySide6.QtGui import QColor, QDesktopServices, QPixmap
+from PySide6.QtGui import QColor, QDesktopServices, QFontMetrics, QPixmap
 from pytestqt.qtbot import QtBot
 
 from getthefish.bot import GetTheFish
@@ -31,11 +31,15 @@ def window(qtbot: QtBot, tmp_path: Path) -> MainWindow:
     return w
 
 
-def test_shows_config(window: MainWindow) -> None:
+def test_shows_config(window: MainWindow, qtbot: QtBot) -> None:
+    window.show()
+    qtbot.waitExposed(window)
     assert window.ui.thresholdBobberSpinBox.value() == 18
     assert window.ui.thresholdCatchSpinBox.value() == 60
-    assert window.ui.thresholdBobberSpinBox.minimumWidth() >= 64
-    assert window.ui.thresholdCatchSpinBox.minimumWidth() >= 64
+    for spin in (window.ui.thresholdBobberSpinBox, window.ui.thresholdCatchSpinBox):
+        required_text_width = QFontMetrics(spin.lineEdit().font()).horizontalAdvance("255") + 12
+        assert spin.width() >= 120
+        assert spin.lineEdit().width() >= required_text_width
     assert window.ui.posStartLabel.text() == "200, 50"
     assert window.ui.posEndLabel.text() == "1100, 400"
     assert window.ui.hexColorLabel.text() == "#48290c"

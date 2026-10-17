@@ -105,8 +105,8 @@ class Ui_MainWindow(object):
         self.thresholdBobberSpinBox.setObjectName(u"thresholdBobberSpinBox")
         sizePolicy.setHeightForWidth(self.thresholdBobberSpinBox.sizePolicy().hasHeightForWidth())
         self.thresholdBobberSpinBox.setSizePolicy(sizePolicy)
-        self.thresholdBobberSpinBox.setMinimumSize(QSize(64, 0))
-        self.thresholdBobberSpinBox.setMaximumSize(QSize(64, 16777215))
+        self.thresholdBobberSpinBox.setMinimumSize(QSize(120, 0))
+        self.thresholdBobberSpinBox.setMaximumSize(QSize(120, 16777215))
 
         self.verticalLayout_2.addWidget(self.thresholdBobberSpinBox)
 
@@ -119,8 +119,8 @@ class Ui_MainWindow(object):
         self.thresholdCatchSpinBox.setObjectName(u"thresholdCatchSpinBox")
         sizePolicy.setHeightForWidth(self.thresholdCatchSpinBox.sizePolicy().hasHeightForWidth())
         self.thresholdCatchSpinBox.setSizePolicy(sizePolicy)
-        self.thresholdCatchSpinBox.setMinimumSize(QSize(64, 0))
-        self.thresholdCatchSpinBox.setMaximumSize(QSize(64, 16777215))
+        self.thresholdCatchSpinBox.setMinimumSize(QSize(120, 0))
+        self.thresholdCatchSpinBox.setMaximumSize(QSize(120, 16777215))
 
         self.verticalLayout_2.addWidget(self.thresholdCatchSpinBox)
 
