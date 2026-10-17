@@ -54,7 +54,7 @@ def test_open_config_folder(window: MainWindow, monkeypatch: pytest.MonkeyPatch)
 
     monkeypatch.setattr(QDesktopServices, "openUrl", open_url)
     window.ui.openConfigFolderButton.click()
-    assert opened == [str(window.config_path.parent.resolve())]
+    assert Path(opened[0]) == window.config_path.parent.resolve()
 
 
 def enter_cast_key(window: MainWindow, text: str) -> None:
