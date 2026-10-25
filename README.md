@@ -146,17 +146,18 @@ tests/                 # pytest suite (no real screen or mouse needed)
 
 ## Development
 
-Install all development and packaging tools, then run the checks with:
+Run the same checks as CI:
 
 ```bash
-uv sync --locked --all-groups
+uv sync --locked
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 uv run --locked mypy
 uv run --locked pytest
-uv lock --check
-uv build
 ```
+
+CI runs them on Windows for every push and pull request. Pushing a tag like
+`v1.2.0` builds `getthefish-gui.exe` and attaches it to a GitHub release.
 
 `uv.lock` is the committed, cross-platform dependency lockfile.
 
