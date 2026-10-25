@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
@@ -13,8 +14,17 @@ from PySide6.QtCore import QPoint, Qt, QUrl
 from PySide6.QtGui import QColor, QDesktopServices, QFontMetrics, QPixmap
 from pytestqt.qtbot import QtBot
 
-from getthefish.bot import GetTheFish
+from getthefish.bot import (
+    BiteSample,
+    BobberFound,
+    GetTheFish,
+    Phase,
+    PhaseChanged,
+    RoundFinished,
+    Stats,
+)
 from getthefish.config import FishConfig, Point
+from getthefish.gui import theme
 from getthefish.gui.main_window import AreaSelector, ColorPicker, MainWindow
 from helpers import NO_DELAY, FakeMouse, FakeScreen, make_image
 
@@ -188,3 +198,136 @@ def test_area_selector(qtbot: QtBot) -> None:
         qtbot.mouseRelease(selector, Qt.MouseButton.LeftButton, pos=QPoint(5, 3))
     start, end = blocker.args
     assert start.x < end.x and start.y < end.y
+
+
+def test_events_update_meter_and_stats(window: MainWindow) -> None:
+    window.handle_event(BobberFound(Point(300, 100), Point(303, 105)))
+    window.handle_event(BiteSample(12))
+    window.handle_event(BiteSample(80))
+    assert list(window.ui.biteMeter.samples) == [12, 80]
+    assert window.ui.biteMeter.peak == 80
+    window.handle_event(RoundFinished(True, Stats(casts=4, catches=3, misses=1)))
+    assert window.ui.castsValue.text() == "4"
+    assert window.ui.catchesValue.text() == "3"
+    assert window.ui.rateValue.text() == "75%"
+
+
+def test_meter_drag_sets_threshold_catch(window: MainWindow, qtbot: QtBot) -> None:
+    window.resize(1100, 700)
+    window.show()
+    qtbot.waitExposed(window)
+    meter = window.ui.biteMeter
+    qtbot.mouseClick(meter, Qt.MouseButton.LeftButton, pos=QPoint(50, meter.height() - 1))
+    assert window.config.threshold_catch == 0
+    assert meter.threshold == 0
+    assert FishConfig.load(window.config_path).threshold_catch == 0
+
+
+def test_thresholds_stay_editable_while_fishing(qtbot: QtBot, tmp_path: Path) -> None:
+    w = MainWindow(FishConfig(), tmp_path / "config.json", idle_bot_factory)
+    qtbot.addWidget(w)
+    w.toggle_fishing()
+    assert w.worker is not None
+    assert w.ui.thresholdCatchSpinBox.isEnabled()
+    assert not w.ui.castKeyEdit.isEnabled()
+    assert w.ui.statusLed.text == "Casting"
+    with qtbot.waitSignal(w.worker.finished, timeout=5000):
+        pass
+    assert w.ui.statusLed.text == "Idle"
+    assert not w.ui.statusLed.pulse
+
+
+def test_status_messages_reach_log_panel(window: MainWindow) -> None:
+    logging.getLogger("getthefish.bot").warning("hello log")
+    assert "hello log" in window.ui.logView.toPlainText()
+
+
+def test_color_picker_loupe(qtbot: QtBot) -> None:
+    picker = ColorPicker(_solid_pixmap(QColor(10, 20, 30)))
+    qtbot.addWidget(picker)
+    picker.show()
+    qtbot.mouseMove(picker, QPoint(5, 5))
+    assert picker.cursor_pos == QPoint(5, 5)
+    picker.grab()  # paints the loupe
+
+
+def test_compact_view_toggle_is_remembered(window: MainWindow, qtbot: QtBot) -> None:
+    window.ui.viewButton.click()
+    assert window.ui.pages.currentWidget() is window.ui.compactPage
+    window.close()
+    reopened = MainWindow(FishConfig(), window.config_path, idle_bot_factory)
+    qtbot.addWidget(reopened)
+    assert reopened.compact
+    reopened.ui.viewButton.click()
+    assert reopened.ui.pages.currentWidget() is reopened.ui.fullPage
+
+
+def test_session_uses_compact_view(window: MainWindow, qtbot: QtBot) -> None:
+    window.toggle_fishing()
+    assert window.worker is not None
+    assert window.compact
+    assert window.ui.compactStartButton.text() == "Stop"
+    with qtbot.waitSignal(window.worker.finished, timeout=5000):
+        pass
+    assert not window.compact
+    assert window.ui.compactStartButton.text() == "Start"
+
+
+def test_theme_toggle_is_remembered(window: MainWindow, qtbot: QtBot) -> None:
+    window.set_dark(True)
+    window.ui.themeButton.click()
+    assert not window.dark
+    assert theme.colors() is theme.LIGHT
+    window.close()
+    reopened = MainWindow(FishConfig(), window.config_path, idle_bot_factory)
+    qtbot.addWidget(reopened)
+    assert not reopened.dark
+
+
+def test_start_refused_when_window_covers_fishing_area(window: MainWindow, qtbot: QtBot) -> None:
+    window.show()
+    qtbot.waitExposed(window)
+    window.config.start_pos, window.config.end_pos = Point(0, 0), Point(4000, 3000)
+    window.toggle_fishing()
+    assert window.worker is None
+    assert "covers the fishing area" in window.ui.statusbar.currentMessage()
+
+
+def test_statistics_add_up_over_runs_and_restarts(window: MainWindow, qtbot: QtBot) -> None:
+    for _ in range(2):
+        window.toggle_fishing()
+        assert window.worker is not None
+        with qtbot.waitSignal(window.worker.finished, timeout=5000):
+            pass
+    # idle_bot_factory never finds the bobber: 3 casts per run, no catches.
+    assert window.ui.castsValue.text() == "6"
+    assert window.ui.todayCastsValue.text() == "6"
+    assert window.ui.totalCastsValue.text() == "6"
+    window.close()
+
+    reopened = MainWindow(FishConfig(), window.config_path, idle_bot_factory)
+    qtbot.addWidget(reopened)
+    assert reopened.ui.castsValue.text() == "0"
+    assert reopened.ui.todayCastsValue.text() == "6"
+    assert reopened.ui.totalCastsValue.text() == "6"
+    assert reopened.ui.compactTodayCatches.text() == "0"
+    assert reopened.ui.compactSessionCatches.text() == "0"
+
+
+def test_status_led_and_round_history(window: MainWindow) -> None:
+    window.handle_event(PhaseChanged(Phase.WAITING))
+    assert window.ui.statusLed.text == "Waiting for bite"
+    assert window.ui.statusLed.tone == "accent"
+    assert window.ui.statusLed.pulse
+    window.ui.statusLed.grab()  # paints the glow
+    window.handle_event(RoundFinished(True, Stats(casts=1, catches=1)))
+    assert window.ui.statusLed.text == "Caught"
+    assert not window.ui.statusLed.pulse
+    window.handle_event(RoundFinished(False, Stats(casts=2, catches=1, misses=1)))
+    window.handle_event(RoundFinished(None, Stats(casts=3, catches=1, misses=1)))
+    assert window.ui.statusLed.text == "No bobber"
+    assert window.ui.statusLed.tone == "danger"
+    window.handle_event(RoundFinished(False, Stats(casts=4, catches=1, misses=1)))  # stopped
+    assert list(window.ui.roundHistory.outcomes) == ["caught", "missed", "no_bobber"]
+    assert list(window.ui.compactRoundHistory.outcomes) == ["caught", "missed", "no_bobber"]
+    window.ui.compactRoundHistory.grab()  # paints the dots
