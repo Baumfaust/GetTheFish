@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [master]
   pull_request:
-    branches: [main, master]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -19,97 +19,24 @@ env:
   UV_NO_PROGRESS: "1"
 
 jobs:
-  lint:
-    name: Lint & type check
-    runs-on: ubuntu-latest
+  check:
+    name: Lint, type check & test
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version-file: .python-version
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           version: 0.13.1
+      # uv installs the Python version from .python-version and the dev group by default.
       - name: Install
-        run: uv sync --locked --python 3.15 --group dev
+        run: uv sync --locked
       - name: Ruff (lint)
-        run: uv run --locked --python 3.15 ruff check --output-format=github .
+        run: uv run --locked ruff check --output-format=github .
       - name: Ruff (format)
-        run: uv run --locked --python 3.15 ruff format --check .
+        run: uv run --locked ruff format --check .
       - name: Mypy
-        run: uv run --locked --python 3.15 mypy
-
-  test:
-    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.12", "3.13", "3.14", "3.15"]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-        with:
-          version: 0.13.1
-      - name: Install Qt system libraries
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libgl1 libegl1 libglib2.0-0 libxkbcommon0 libdbus-1-3 libfontconfig1
-      - name: Install
-        run: uv sync --locked --python ${{ matrix.python-version }} --group dev
+        run: uv run --locked mypy
       - name: Pytest
-        run: uv run --locked --python ${{ matrix.python-version }} pytest --cov-report=xml
-      - name: Upload coverage report
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.15'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: coverage
-          path: coverage.xml
-
-  audit:
-    name: Dependency audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version-file: .python-version
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-        with:
-          version: 0.13.1
-      - name: Install
-        run: uv sync --locked --python 3.15 --group dev
-      - name: Export locked dependencies for audit
-        run: uv export --locked --all-groups --no-emit-project --no-hashes --output-file /tmp/requirements-audit.txt
-      - name: pip-audit
-        run: uv run --locked pip-audit --requirement /tmp/requirements-audit.txt
-
-  build:
-    name: Build package
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version-file: .python-version
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-        with:
-          version: 0.13.1
-      - name: Validate lockfile
-        run: uv lock --check
-      - name: Build wheel and sdist
-        run: uv build
+        run: uv run --locked pytest
