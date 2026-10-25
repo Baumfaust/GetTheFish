@@ -59,6 +59,23 @@ In the GUI:
 - **Threshold Bobber / Threshold Catch** – per-channel RGB tolerance for finding the bobber and for detecting a bite.
 - **Jump to Bobber** – keep the cursor on the bobber while waiting; otherwise it returns to where it was after reeling in.
 - **Start / Stop** – run the fishing loop in the background.
+- **Preview** – a setup aid: shows the search area with the pixels matching the bobber colour
+  (at the current *Threshold Bobber*) in pink and the detected bobber circled. Stray pink
+  pixels away from the bobber mean the threshold is too loose. Paused while fishing.
+- **Bite Meter** – live graph of how much the watched pixel changes. The dashed line is
+  *Threshold Catch*; click or drag in the graph to move it. Thresholds stay editable while
+  fishing so you can tune them live.
+- **Session** – casts, catches, misses, catch rate, fish per hour and session time.
+- **Log** – the latest messages; enable *Verbose Log* for every search and bite detail.
+- **Compact / Expand** – a small view with Start/Stop, stats and the bite meter, meant to sit
+  beside the game in windowed mode. Start switches to it automatically and the previous view
+  returns when the session ends. Each view remembers its own window position.
+- **Dark / Light** – switches the colour theme (the first start follows the system setting).
+
+Keep this window out of the fishing area: the cast clicks into the area to focus the game, so
+a window covering it swallows the click. Start refuses to run while the window overlaps it.
+
+When picking the colour, a magnifier next to the cursor shows the exact pixel and its value.
 
 To stop the headless version press **Ctrl+C**. In both modes moving the mouse
 into a screen corner triggers the emergency stop.

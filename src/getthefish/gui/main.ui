@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -6,312 +6,754 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>319</width>
-    <height>274</height>
+    <width>1040</width>
+    <height>680</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>GetTheFish</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2,0">
+   <layout class="QVBoxLayout" name="mainLayout" stretch="0,1">
+    <property name="spacing">
+     <number>8</number>
+    </property>
+    <property name="leftMargin">
+     <number>12</number>
+    </property>
+    <property name="topMargin">
+     <number>12</number>
+    </property>
+    <property name="rightMargin">
+     <number>12</number>
+    </property>
+    <property name="bottomMargin">
+     <number>12</number>
+    </property>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QHBoxLayout" name="headerLayout">
+      <property name="spacing">
+       <number>8</number>
+      </property>
       <item>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Start:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLabel" name="posStartLabel">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>End</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="posEndLabel">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Fishing Area</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QLabel" name="titleLabel">
+        <property name="text">
+         <string>GetTheFish</string>
+        </property>
+       </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Bobber Color</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="bobberColorLabel">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLabel" name="hexColorLabel">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QLabel" name="stateLabel">
+        <property name="text">
+         <string>IDLE</string>
+        </property>
+       </widget>
       </item>
       <item>
-       <spacer name="verticalSpacer_3">
+       <spacer name="headerSpacer">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
+        <property name="sizeHint">
          <size>
-          <width>20</width>
-          <height>5</height>
+          <width>10</width>
+          <height>0</height>
          </size>
         </property>
        </spacer>
       </item>
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QPushButton" name="themeButton">
         <property name="text">
-         <string>Threshold Bobber</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QSpinBox" name="thresholdBobberSpinBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>120</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>120</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Threshold Catch</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QSpinBox" name="thresholdCatchSpinBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>120</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>120</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="castKeyLabel">
-        <property name="text">
-         <string>Cast Key</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="castKeyEdit">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>60</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>60</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="maxLength">
-         <number>20</number>
+         <string>Light</string>
         </property>
         <property name="toolTip">
-         <string>Key bound to the Fishing spell in the game, e.g. 0, f, f1, num0</string>
+         <string>Switch between light and dark mode</string>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::FocusPolicy::NoFocus</enum>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="jumpToBobberCheck">
+       <widget class="QPushButton" name="viewButton">
         <property name="text">
-         <string>Jump to Bobber</string>
+         <string>Compact</string>
+        </property>
+        <property name="toolTip">
+         <string>Switch between the full and the compact view</string>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::FocusPolicy::NoFocus</enum>
         </property>
        </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="verboseCheck">
-        <property name="text">
-         <string>verbose</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="verticalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
       </item>
      </layout>
     </item>
     <item>
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>350</width>
-        <height>0</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QPushButton" name="startButton">
-        <property name="text">
-         <string>Start</string>
+     <widget class="QStackedWidget" name="pages">
+      <widget class="QWidget" name="fullPage">
+       <layout class="QHBoxLayout" name="fullLayout" stretch="0,1">
+        <property name="spacing">
+         <number>12</number>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="areaButton">
-        <property name="text">
-         <string>Set Area</string>
+        <property name="leftMargin">
+         <number>0</number>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="colorButton">
-        <property name="text">
-         <string>Select Color</string>
+        <property name="topMargin">
+         <number>0</number>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="openConfigFolderButton">
-        <property name="text">
-         <string>Open Config/Logs Folder</string>
+        <property name="rightMargin">
+         <number>0</number>
         </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+        <property name="bottomMargin">
+         <number>0</number>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
+        <item>
+         <layout class="QVBoxLayout" name="leftColumn" stretch="0,0,0,1">
+          <property name="spacing">
+           <number>4</number>
+          </property>
+          <item>
+           <widget class="QGroupBox" name="setupGroup">
+            <property name="title">
+             <string>Setup</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>320</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <layout class="QGridLayout" name="setupLayout">
+             <property name="spacing">
+              <number>8</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="areaLabel">
+               <property name="text">
+                <string>Area</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <layout class="QHBoxLayout" name="areaLayout">
+               <item>
+                <widget class="QLabel" name="posStartLabel">
+                 <property name="text">
+                  <string />
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="areaArrowLabel">
+                 <property name="text">
+                  <string>→</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="posEndLabel">
+                 <property name="text">
+                  <string />
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="areaSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint">
+                  <size>
+                   <width>10</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="areaButton">
+               <property name="text">
+                <string>Set Area</string>
+               </property>
+               <property name="toolTip">
+                <string>Drag a rectangle over the water where the bobber lands</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="bobberLabel">
+               <property name="text">
+                <string>Bobber</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <layout class="QHBoxLayout" name="colorLayout">
+               <item>
+                <widget class="QLabel" name="bobberColorLabel">
+                 <property name="text">
+                  <string />
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>18</width>
+                   <height>18</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>18</width>
+                   <height>18</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="hexColorLabel">
+                 <property name="text">
+                  <string />
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="colorSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint">
+                  <size>
+                   <width>10</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+             <item row="1" column="2">
+              <widget class="QPushButton" name="colorButton">
+               <property name="text">
+                <string>Pick Color</string>
+               </property>
+               <property name="toolTip">
+                <string>Click the bobber in a frozen screenshot</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="castKeyLabel">
+               <property name="text">
+                <string>Cast Key</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1" colspan="2">
+              <widget class="QLineEdit" name="castKeyEdit">
+               <property name="toolTip">
+                <string>Key bound to the Fishing spell in the game, e.g. 0, f, f1, num0</string>
+               </property>
+               <property name="maxLength">
+                <number>20</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="tuningGroup">
+            <property name="title">
+             <string>Tuning</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>320</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <layout class="QGridLayout" name="tuningLayout">
+             <property name="spacing">
+              <number>8</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QLabel" name="thresholdBobberLabel">
+               <property name="text">
+                <string>Threshold Bobber</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="thresholdBobberSpinBox">
+               <property name="toolTip">
+                <string>Per-channel RGB tolerance when searching the bobber (pink pixels in the preview)</string>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>120</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>120</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="thresholdCatchLabel">
+               <property name="text">
+                <string>Threshold Catch</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="thresholdCatchSpinBox">
+               <property name="toolTip">
+                <string>Colour change of the watched pixel that counts as a bite (dashed line in the meter)</string>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>120</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>120</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QCheckBox" name="jumpToBobberCheck">
+               <property name="text">
+                <string>Jump to Bobber</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0" colspan="2">
+              <widget class="QCheckBox" name="verboseCheck">
+               <property name="text">
+                <string>Verbose Log</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="startLayout">
+            <property name="topMargin">
+             <number>12</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="startButton">
+              <property name="text">
+               <string>Start</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="logGroup">
+            <property name="title">
+             <string>Log</string>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>320</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>320</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <layout class="QVBoxLayout" name="logLayout">
+             <item>
+              <widget class="QPlainTextEdit" name="logView">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="maximumBlockCount">
+                <number>500</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="openConfigFolderButton">
+               <property name="text">
+                <string>Open Config/Logs Folder</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="rightColumn" stretch="0,1,0">
+          <property name="spacing">
+           <number>4</number>
+          </property>
+          <item>
+           <widget class="QGroupBox" name="sessionGroup">
+            <property name="title">
+             <string>Session</string>
+            </property>
+            <layout class="QHBoxLayout" name="statsLayout">
+             <property name="spacing">
+              <number>8</number>
+             </property>
+             <item>
+              <layout class="QVBoxLayout" name="castsLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="castsValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="castsCaption">
+                 <property name="text">
+                  <string>Casts</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="catchesLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="catchesValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="catchesCaption">
+                 <property name="text">
+                  <string>Catches</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="missesLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="missesValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="missesCaption">
+                 <property name="text">
+                  <string>Misses</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="rateLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="rateValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="rateCaption">
+                 <property name="text">
+                  <string>Catch rate</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="perHourLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="perHourValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="perHourCaption">
+                 <property name="text">
+                  <string>Fish / hour</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="elapsedLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="elapsedValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="elapsedCaption">
+                 <property name="text">
+                  <string>Time</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="previewGroup">
+            <property name="title">
+             <string>Preview</string>
+            </property>
+            <layout class="QVBoxLayout" name="previewLayout" stretch="1,0">
+             <item>
+              <widget class="PreviewView" name="previewView">
+               <property name="toolTip">
+                <string>Check your area and colour before fishing: pink pixels match the bobber colour, the circle is where the bobber would be found</string>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="previewInfoLayout">
+               <item>
+                <widget class="QLabel" name="previewInfoLabel">
+                 <property name="text">
+                  <string />
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="previewInfoSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint">
+                  <size>
+                   <width>10</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="previewCheck">
+                 <property name="text">
+                  <string>Show</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="meterGroup">
+            <property name="title">
+             <string>Bite meter</string>
+            </property>
+            <layout class="QVBoxLayout" name="meterLayout">
+             <item>
+              <widget class="BiteMeter" name="biteMeter">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>130</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="compactPage">
+       <layout class="QVBoxLayout" name="compactLayout">
+        <property name="spacing">
+         <number>8</number>
         </property>
-       </spacer>
-      </item>
-     </layout>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="compactStartButton">
+          <property name="text">
+           <string>Start</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="compactStatsLabel">
+          <property name="text">
+           <string />
+          </property>
+          <property name="caption" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="BiteMeter" name="compactMeter">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>80</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar" />
  </widget>
- <resources/>
- <connections/>
+ <customwidgets>
+  <customwidget>
+   <class>PreviewView</class>
+   <extends>QWidget</extends>
+   <header>getthefish.gui.widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>BiteMeter</class>
+   <extends>QWidget</extends>
+   <header>getthefish.gui.widgets</header>
+  </customwidget>
+ </customwidgets>
+ <resources />
+ <connections />
 </ui>

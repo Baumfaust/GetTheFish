@@ -5,7 +5,15 @@ from dataclasses import replace
 
 import pytest
 
-from getthefish.bot import BITE_WATCH_OFFSET, MAX_CONSECUTIVE_FAILURES, GetTheFish
+from getthefish.bot import (
+    BITE_WATCH_OFFSET,
+    MAX_CONSECUTIVE_FAILURES,
+    BiteSample,
+    BobberFound,
+    Event,
+    GetTheFish,
+    RoundFinished,
+)
 from getthefish.config import FishConfig, Point
 from getthefish.detection import Image
 from getthefish.devices import AbortedError
@@ -77,6 +85,29 @@ def test_fish_once_full_round(config: FishConfig) -> None:
     # Bobber's top-most pixel (60, 40) plus the original watch offset (3, 5).
     assert catch_click == Point(60 + BITE_WATCH_OFFSET.x, 40 + BITE_WATCH_OFFSET.y)
     assert bot.stats.casts == 1 and bot.stats.catches == 1
+
+
+def test_events_are_emitted(config: FishConfig) -> None:
+    events: list[Event] = []
+    screen = FakeScreen(lambda n: scene(bite=n >= 3))
+    bot = GetTheFish(config, screen, FakeMouse(), NO_DELAY, on_event=events.append)
+    bot.fish_once()
+    found = events[0]
+    assert isinstance(found, BobberFound)
+    assert found.watch == Point(60 + BITE_WATCH_OFFSET.x, 40 + BITE_WATCH_OFFSET.y)
+    changes = [e.change for e in events if isinstance(e, BiteSample)]
+    assert changes[0] == 0 and changes[-1] > config.threshold_catch
+
+
+def test_run_reports_each_round(config: FishConfig) -> None:
+    events: list[Event] = []
+    bot = GetTheFish(config, FakeScreen(scene(bobber=False)), FakeMouse(), NO_DELAY)
+    bot.on_event = events.append
+    bot.run()
+    rounds = [e for e in events if isinstance(e, RoundFinished)]
+    assert len(rounds) == MAX_CONSECUTIVE_FAILURES
+    assert all(r.result is None for r in rounds)
+    assert [r.stats.casts for r in rounds] == [1, 2, 3]
 
 
 def test_bite_diagnostics_are_reported(config: FishConfig) -> None:
