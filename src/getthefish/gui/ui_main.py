@@ -21,13 +21,13 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,
     QSpinBox, QStackedWidget, QStatusBar, QVBoxLayout,
     QWidget)
 
-from getthefish.gui.widgets import (BiteMeter, PreviewView)
+from getthefish.gui.widgets import (BiteMeter, RoundHistory, StatusLed)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1040, 680)
+        MainWindow.resize(1000, 600)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.mainLayout = QVBoxLayout(self.centralwidget)
@@ -42,10 +42,10 @@ class Ui_MainWindow(object):
 
         self.headerLayout.addWidget(self.titleLabel)
 
-        self.stateLabel = QLabel(self.centralwidget)
-        self.stateLabel.setObjectName(u"stateLabel")
+        self.statusLed = StatusLed(self.centralwidget)
+        self.statusLed.setObjectName(u"statusLed")
 
-        self.headerLayout.addWidget(self.stateLabel)
+        self.headerLayout.addWidget(self.statusLed)
 
         self.headerSpacer = QSpacerItem(10, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -227,26 +227,9 @@ class Ui_MainWindow(object):
 
         self.leftColumn.addLayout(self.startLayout)
 
-        self.logGroup = QGroupBox(self.fullPage)
-        self.logGroup.setObjectName(u"logGroup")
-        self.logGroup.setMinimumSize(QSize(320, 0))
-        self.logGroup.setMaximumSize(QSize(320, 16777215))
-        self.logLayout = QVBoxLayout(self.logGroup)
-        self.logLayout.setObjectName(u"logLayout")
-        self.logView = QPlainTextEdit(self.logGroup)
-        self.logView.setObjectName(u"logView")
-        self.logView.setReadOnly(True)
-        self.logView.setMaximumBlockCount(500)
+        self.leftSpacer = QSpacerItem(0, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.logLayout.addWidget(self.logView)
-
-        self.openConfigFolderButton = QPushButton(self.logGroup)
-        self.openConfigFolderButton.setObjectName(u"openConfigFolderButton")
-
-        self.logLayout.addWidget(self.openConfigFolderButton)
-
-
-        self.leftColumn.addWidget(self.logGroup)
+        self.leftColumn.addItem(self.leftSpacer)
 
         self.leftColumn.setStretch(3, 1)
 
@@ -257,157 +240,201 @@ class Ui_MainWindow(object):
         self.rightColumn.setObjectName(u"rightColumn")
         self.sessionGroup = QGroupBox(self.fullPage)
         self.sessionGroup.setObjectName(u"sessionGroup")
-        self.statsLayout = QHBoxLayout(self.sessionGroup)
-        self.statsLayout.setSpacing(8)
+        self.sessionLayout = QVBoxLayout(self.sessionGroup)
+        self.sessionLayout.setSpacing(10)
+        self.sessionLayout.setObjectName(u"sessionLayout")
+        self.statsLayout = QGridLayout()
+        self.statsLayout.setSpacing(6)
         self.statsLayout.setObjectName(u"statsLayout")
-        self.castsLayout = QVBoxLayout()
-        self.castsLayout.setSpacing(0)
-        self.castsLayout.setObjectName(u"castsLayout")
-        self.castsValue = QLabel(self.sessionGroup)
-        self.castsValue.setObjectName(u"castsValue")
-        self.castsValue.setProperty(u"statValue", True)
-
-        self.castsLayout.addWidget(self.castsValue)
-
         self.castsCaption = QLabel(self.sessionGroup)
         self.castsCaption.setObjectName(u"castsCaption")
         self.castsCaption.setProperty(u"caption", True)
 
-        self.castsLayout.addWidget(self.castsCaption)
+        self.statsLayout.addWidget(self.castsCaption, 0, 1, 1, 1)
 
+        self.castsValue = QLabel(self.sessionGroup)
+        self.castsValue.setObjectName(u"castsValue")
+        self.castsValue.setProperty(u"statValue", True)
 
-        self.statsLayout.addLayout(self.castsLayout)
+        self.statsLayout.addWidget(self.castsValue, 1, 1, 1, 1)
 
-        self.catchesLayout = QVBoxLayout()
-        self.catchesLayout.setSpacing(0)
-        self.catchesLayout.setObjectName(u"catchesLayout")
-        self.catchesValue = QLabel(self.sessionGroup)
-        self.catchesValue.setObjectName(u"catchesValue")
-        self.catchesValue.setProperty(u"statValue", True)
+        self.todayCastsValue = QLabel(self.sessionGroup)
+        self.todayCastsValue.setObjectName(u"todayCastsValue")
+        self.todayCastsValue.setProperty(u"statValue", True)
 
-        self.catchesLayout.addWidget(self.catchesValue)
+        self.statsLayout.addWidget(self.todayCastsValue, 2, 1, 1, 1)
+
+        self.totalCastsValue = QLabel(self.sessionGroup)
+        self.totalCastsValue.setObjectName(u"totalCastsValue")
+        self.totalCastsValue.setProperty(u"statValue", True)
+
+        self.statsLayout.addWidget(self.totalCastsValue, 3, 1, 1, 1)
 
         self.catchesCaption = QLabel(self.sessionGroup)
         self.catchesCaption.setObjectName(u"catchesCaption")
         self.catchesCaption.setProperty(u"caption", True)
 
-        self.catchesLayout.addWidget(self.catchesCaption)
+        self.statsLayout.addWidget(self.catchesCaption, 0, 2, 1, 1)
 
+        self.catchesValue = QLabel(self.sessionGroup)
+        self.catchesValue.setObjectName(u"catchesValue")
+        self.catchesValue.setProperty(u"statValue", True)
 
-        self.statsLayout.addLayout(self.catchesLayout)
+        self.statsLayout.addWidget(self.catchesValue, 1, 2, 1, 1)
 
-        self.missesLayout = QVBoxLayout()
-        self.missesLayout.setSpacing(0)
-        self.missesLayout.setObjectName(u"missesLayout")
-        self.missesValue = QLabel(self.sessionGroup)
-        self.missesValue.setObjectName(u"missesValue")
-        self.missesValue.setProperty(u"statValue", True)
+        self.todayCatchesValue = QLabel(self.sessionGroup)
+        self.todayCatchesValue.setObjectName(u"todayCatchesValue")
+        self.todayCatchesValue.setProperty(u"statValue", True)
 
-        self.missesLayout.addWidget(self.missesValue)
+        self.statsLayout.addWidget(self.todayCatchesValue, 2, 2, 1, 1)
+
+        self.totalCatchesValue = QLabel(self.sessionGroup)
+        self.totalCatchesValue.setObjectName(u"totalCatchesValue")
+        self.totalCatchesValue.setProperty(u"statValue", True)
+
+        self.statsLayout.addWidget(self.totalCatchesValue, 3, 2, 1, 1)
 
         self.missesCaption = QLabel(self.sessionGroup)
         self.missesCaption.setObjectName(u"missesCaption")
         self.missesCaption.setProperty(u"caption", True)
 
-        self.missesLayout.addWidget(self.missesCaption)
+        self.statsLayout.addWidget(self.missesCaption, 0, 3, 1, 1)
 
+        self.missesValue = QLabel(self.sessionGroup)
+        self.missesValue.setObjectName(u"missesValue")
+        self.missesValue.setProperty(u"statValue", True)
 
-        self.statsLayout.addLayout(self.missesLayout)
+        self.statsLayout.addWidget(self.missesValue, 1, 3, 1, 1)
 
-        self.rateLayout = QVBoxLayout()
-        self.rateLayout.setSpacing(0)
-        self.rateLayout.setObjectName(u"rateLayout")
-        self.rateValue = QLabel(self.sessionGroup)
-        self.rateValue.setObjectName(u"rateValue")
-        self.rateValue.setProperty(u"statValue", True)
+        self.todayMissesValue = QLabel(self.sessionGroup)
+        self.todayMissesValue.setObjectName(u"todayMissesValue")
+        self.todayMissesValue.setProperty(u"statValue", True)
 
-        self.rateLayout.addWidget(self.rateValue)
+        self.statsLayout.addWidget(self.todayMissesValue, 2, 3, 1, 1)
+
+        self.totalMissesValue = QLabel(self.sessionGroup)
+        self.totalMissesValue.setObjectName(u"totalMissesValue")
+        self.totalMissesValue.setProperty(u"statValue", True)
+
+        self.statsLayout.addWidget(self.totalMissesValue, 3, 3, 1, 1)
 
         self.rateCaption = QLabel(self.sessionGroup)
         self.rateCaption.setObjectName(u"rateCaption")
         self.rateCaption.setProperty(u"caption", True)
 
-        self.rateLayout.addWidget(self.rateCaption)
+        self.statsLayout.addWidget(self.rateCaption, 0, 4, 1, 1)
 
+        self.rateValue = QLabel(self.sessionGroup)
+        self.rateValue.setObjectName(u"rateValue")
+        self.rateValue.setProperty(u"statValue", True)
 
-        self.statsLayout.addLayout(self.rateLayout)
+        self.statsLayout.addWidget(self.rateValue, 1, 4, 1, 1)
 
-        self.perHourLayout = QVBoxLayout()
-        self.perHourLayout.setSpacing(0)
-        self.perHourLayout.setObjectName(u"perHourLayout")
-        self.perHourValue = QLabel(self.sessionGroup)
-        self.perHourValue.setObjectName(u"perHourValue")
-        self.perHourValue.setProperty(u"statValue", True)
+        self.todayRateValue = QLabel(self.sessionGroup)
+        self.todayRateValue.setObjectName(u"todayRateValue")
+        self.todayRateValue.setProperty(u"statValue", True)
 
-        self.perHourLayout.addWidget(self.perHourValue)
+        self.statsLayout.addWidget(self.todayRateValue, 2, 4, 1, 1)
+
+        self.totalRateValue = QLabel(self.sessionGroup)
+        self.totalRateValue.setObjectName(u"totalRateValue")
+        self.totalRateValue.setProperty(u"statValue", True)
+
+        self.statsLayout.addWidget(self.totalRateValue, 3, 4, 1, 1)
 
         self.perHourCaption = QLabel(self.sessionGroup)
         self.perHourCaption.setObjectName(u"perHourCaption")
         self.perHourCaption.setProperty(u"caption", True)
 
-        self.perHourLayout.addWidget(self.perHourCaption)
+        self.statsLayout.addWidget(self.perHourCaption, 0, 5, 1, 1)
 
+        self.perHourValue = QLabel(self.sessionGroup)
+        self.perHourValue.setObjectName(u"perHourValue")
+        self.perHourValue.setProperty(u"statValue", True)
 
-        self.statsLayout.addLayout(self.perHourLayout)
+        self.statsLayout.addWidget(self.perHourValue, 1, 5, 1, 1)
 
-        self.elapsedLayout = QVBoxLayout()
-        self.elapsedLayout.setSpacing(0)
-        self.elapsedLayout.setObjectName(u"elapsedLayout")
-        self.elapsedValue = QLabel(self.sessionGroup)
-        self.elapsedValue.setObjectName(u"elapsedValue")
-        self.elapsedValue.setProperty(u"statValue", True)
+        self.todayPerHourValue = QLabel(self.sessionGroup)
+        self.todayPerHourValue.setObjectName(u"todayPerHourValue")
+        self.todayPerHourValue.setProperty(u"statValue", True)
 
-        self.elapsedLayout.addWidget(self.elapsedValue)
+        self.statsLayout.addWidget(self.todayPerHourValue, 2, 5, 1, 1)
+
+        self.totalPerHourValue = QLabel(self.sessionGroup)
+        self.totalPerHourValue.setObjectName(u"totalPerHourValue")
+        self.totalPerHourValue.setProperty(u"statValue", True)
+
+        self.statsLayout.addWidget(self.totalPerHourValue, 3, 5, 1, 1)
 
         self.elapsedCaption = QLabel(self.sessionGroup)
         self.elapsedCaption.setObjectName(u"elapsedCaption")
         self.elapsedCaption.setProperty(u"caption", True)
 
-        self.elapsedLayout.addWidget(self.elapsedCaption)
+        self.statsLayout.addWidget(self.elapsedCaption, 0, 6, 1, 1)
+
+        self.elapsedValue = QLabel(self.sessionGroup)
+        self.elapsedValue.setObjectName(u"elapsedValue")
+        self.elapsedValue.setProperty(u"statValue", True)
+
+        self.statsLayout.addWidget(self.elapsedValue, 1, 6, 1, 1)
+
+        self.todayElapsedValue = QLabel(self.sessionGroup)
+        self.todayElapsedValue.setObjectName(u"todayElapsedValue")
+        self.todayElapsedValue.setProperty(u"statValue", True)
+
+        self.statsLayout.addWidget(self.todayElapsedValue, 2, 6, 1, 1)
+
+        self.totalElapsedValue = QLabel(self.sessionGroup)
+        self.totalElapsedValue.setObjectName(u"totalElapsedValue")
+        self.totalElapsedValue.setProperty(u"statValue", True)
+
+        self.statsLayout.addWidget(self.totalElapsedValue, 3, 6, 1, 1)
+
+        self.sessionLabel = QLabel(self.sessionGroup)
+        self.sessionLabel.setObjectName(u"sessionLabel")
+        self.sessionLabel.setProperty(u"caption", True)
+
+        self.statsLayout.addWidget(self.sessionLabel, 1, 0, 1, 1)
+
+        self.todayLabel = QLabel(self.sessionGroup)
+        self.todayLabel.setObjectName(u"todayLabel")
+        self.todayLabel.setProperty(u"caption", True)
+
+        self.statsLayout.addWidget(self.todayLabel, 2, 0, 1, 1)
+
+        self.totalLabel = QLabel(self.sessionGroup)
+        self.totalLabel.setObjectName(u"totalLabel")
+        self.totalLabel.setProperty(u"caption", True)
+
+        self.statsLayout.addWidget(self.totalLabel, 3, 0, 1, 1)
 
 
-        self.statsLayout.addLayout(self.elapsedLayout)
+        self.sessionLayout.addLayout(self.statsLayout)
+
+        self.roundsLayout = QHBoxLayout()
+        self.roundsLayout.setSpacing(8)
+        self.roundsLayout.setObjectName(u"roundsLayout")
+        self.roundsLabel = QLabel(self.sessionGroup)
+        self.roundsLabel.setObjectName(u"roundsLabel")
+        self.roundsLabel.setProperty(u"caption", True)
+
+        self.roundsLayout.addWidget(self.roundsLabel)
+
+        self.roundHistory = RoundHistory(self.sessionGroup)
+        self.roundHistory.setObjectName(u"roundHistory")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.roundHistory.sizePolicy().hasHeightForWidth())
+        self.roundHistory.setSizePolicy(sizePolicy1)
+
+        self.roundsLayout.addWidget(self.roundHistory)
+
+
+        self.sessionLayout.addLayout(self.roundsLayout)
 
 
         self.rightColumn.addWidget(self.sessionGroup)
-
-        self.previewGroup = QGroupBox(self.fullPage)
-        self.previewGroup.setObjectName(u"previewGroup")
-        self.previewLayout = QVBoxLayout(self.previewGroup)
-        self.previewLayout.setObjectName(u"previewLayout")
-        self.previewView = PreviewView(self.previewGroup)
-        self.previewView.setObjectName(u"previewView")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.previewView.sizePolicy().hasHeightForWidth())
-        self.previewView.setSizePolicy(sizePolicy1)
-
-        self.previewLayout.addWidget(self.previewView)
-
-        self.previewInfoLayout = QHBoxLayout()
-        self.previewInfoLayout.setObjectName(u"previewInfoLayout")
-        self.previewInfoLabel = QLabel(self.previewGroup)
-        self.previewInfoLabel.setObjectName(u"previewInfoLabel")
-
-        self.previewInfoLayout.addWidget(self.previewInfoLabel)
-
-        self.previewInfoSpacer = QSpacerItem(10, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.previewInfoLayout.addItem(self.previewInfoSpacer)
-
-        self.previewCheck = QCheckBox(self.previewGroup)
-        self.previewCheck.setObjectName(u"previewCheck")
-        self.previewCheck.setChecked(True)
-
-        self.previewInfoLayout.addWidget(self.previewCheck)
-
-
-        self.previewLayout.addLayout(self.previewInfoLayout)
-
-        self.previewLayout.setStretch(0, 1)
-
-        self.rightColumn.addWidget(self.previewGroup)
 
         self.meterGroup = QGroupBox(self.fullPage)
         self.meterGroup.setObjectName(u"meterGroup")
@@ -415,14 +442,42 @@ class Ui_MainWindow(object):
         self.meterLayout.setObjectName(u"meterLayout")
         self.biteMeter = BiteMeter(self.meterGroup)
         self.biteMeter.setObjectName(u"biteMeter")
-        self.biteMeter.setMinimumSize(QSize(0, 130))
+        self.biteMeter.setMinimumSize(QSize(0, 120))
 
         self.meterLayout.addWidget(self.biteMeter)
 
 
         self.rightColumn.addWidget(self.meterGroup)
 
-        self.rightColumn.setStretch(1, 1)
+        self.logGroup = QGroupBox(self.fullPage)
+        self.logGroup.setObjectName(u"logGroup")
+        self.logLayout = QVBoxLayout(self.logGroup)
+        self.logLayout.setObjectName(u"logLayout")
+        self.logView = QPlainTextEdit(self.logGroup)
+        self.logView.setObjectName(u"logView")
+        self.logView.setReadOnly(True)
+        self.logView.setMaximumBlockCount(500)
+
+        self.logLayout.addWidget(self.logView)
+
+        self.logButtonLayout = QHBoxLayout()
+        self.logButtonLayout.setObjectName(u"logButtonLayout")
+        self.logButtonSpacer = QSpacerItem(10, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.logButtonLayout.addItem(self.logButtonSpacer)
+
+        self.openConfigFolderButton = QPushButton(self.logGroup)
+        self.openConfigFolderButton.setObjectName(u"openConfigFolderButton")
+
+        self.logButtonLayout.addWidget(self.openConfigFolderButton)
+
+
+        self.logLayout.addLayout(self.logButtonLayout)
+
+
+        self.rightColumn.addWidget(self.logGroup)
+
+        self.rightColumn.setStretch(2, 1)
 
         self.fullLayout.addLayout(self.rightColumn)
 
@@ -439,11 +494,115 @@ class Ui_MainWindow(object):
 
         self.compactLayout.addWidget(self.compactStartButton)
 
-        self.compactStatsLabel = QLabel(self.compactPage)
-        self.compactStatsLabel.setObjectName(u"compactStatsLabel")
-        self.compactStatsLabel.setProperty(u"caption", True)
+        self.compactRoundHistory = RoundHistory(self.compactPage)
+        self.compactRoundHistory.setObjectName(u"compactRoundHistory")
+        sizePolicy1.setHeightForWidth(self.compactRoundHistory.sizePolicy().hasHeightForWidth())
+        self.compactRoundHistory.setSizePolicy(sizePolicy1)
 
-        self.compactLayout.addWidget(self.compactStatsLabel)
+        self.compactLayout.addWidget(self.compactRoundHistory)
+
+        self.compactStatsLayout = QGridLayout()
+        self.compactStatsLayout.setSpacing(2)
+        self.compactStatsLayout.setObjectName(u"compactStatsLayout")
+        self.compactCaughtCaption = QLabel(self.compactPage)
+        self.compactCaughtCaption.setObjectName(u"compactCaughtCaption")
+        self.compactCaughtCaption.setProperty(u"caption", True)
+        self.compactCaughtCaption.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactCaughtCaption, 0, 1, 1, 1)
+
+        self.compactRateCaption = QLabel(self.compactPage)
+        self.compactRateCaption.setObjectName(u"compactRateCaption")
+        self.compactRateCaption.setProperty(u"caption", True)
+        self.compactRateCaption.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactRateCaption, 0, 2, 1, 1)
+
+        self.compactTimeCaption = QLabel(self.compactPage)
+        self.compactTimeCaption.setObjectName(u"compactTimeCaption")
+        self.compactTimeCaption.setProperty(u"caption", True)
+        self.compactTimeCaption.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactTimeCaption, 0, 3, 1, 1)
+
+        self.compactSessionLabel = QLabel(self.compactPage)
+        self.compactSessionLabel.setObjectName(u"compactSessionLabel")
+        self.compactSessionLabel.setProperty(u"caption", True)
+
+        self.compactStatsLayout.addWidget(self.compactSessionLabel, 1, 0, 1, 1)
+
+        self.compactSessionCatches = QLabel(self.compactPage)
+        self.compactSessionCatches.setObjectName(u"compactSessionCatches")
+        self.compactSessionCatches.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactSessionCatches, 1, 1, 1, 1)
+
+        self.compactSessionRate = QLabel(self.compactPage)
+        self.compactSessionRate.setObjectName(u"compactSessionRate")
+        self.compactSessionRate.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactSessionRate, 1, 2, 1, 1)
+
+        self.compactSessionTime = QLabel(self.compactPage)
+        self.compactSessionTime.setObjectName(u"compactSessionTime")
+        self.compactSessionTime.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactSessionTime, 1, 3, 1, 1)
+
+        self.compactTodayLabel = QLabel(self.compactPage)
+        self.compactTodayLabel.setObjectName(u"compactTodayLabel")
+        self.compactTodayLabel.setProperty(u"caption", True)
+
+        self.compactStatsLayout.addWidget(self.compactTodayLabel, 2, 0, 1, 1)
+
+        self.compactTodayCatches = QLabel(self.compactPage)
+        self.compactTodayCatches.setObjectName(u"compactTodayCatches")
+        self.compactTodayCatches.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactTodayCatches, 2, 1, 1, 1)
+
+        self.compactTodayRate = QLabel(self.compactPage)
+        self.compactTodayRate.setObjectName(u"compactTodayRate")
+        self.compactTodayRate.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactTodayRate, 2, 2, 1, 1)
+
+        self.compactTodayTime = QLabel(self.compactPage)
+        self.compactTodayTime.setObjectName(u"compactTodayTime")
+        self.compactTodayTime.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactTodayTime, 2, 3, 1, 1)
+
+        self.compactTotalLabel = QLabel(self.compactPage)
+        self.compactTotalLabel.setObjectName(u"compactTotalLabel")
+        self.compactTotalLabel.setProperty(u"caption", True)
+
+        self.compactStatsLayout.addWidget(self.compactTotalLabel, 3, 0, 1, 1)
+
+        self.compactTotalCatches = QLabel(self.compactPage)
+        self.compactTotalCatches.setObjectName(u"compactTotalCatches")
+        self.compactTotalCatches.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactTotalCatches, 3, 1, 1, 1)
+
+        self.compactTotalRate = QLabel(self.compactPage)
+        self.compactTotalRate.setObjectName(u"compactTotalRate")
+        self.compactTotalRate.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactTotalRate, 3, 2, 1, 1)
+
+        self.compactTotalTime = QLabel(self.compactPage)
+        self.compactTotalTime.setObjectName(u"compactTotalTime")
+        self.compactTotalTime.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignVCenter)
+
+        self.compactStatsLayout.addWidget(self.compactTotalTime, 3, 3, 1, 1)
+
+        self.compactStatsLayout.setColumnStretch(0, 1)
+        self.compactStatsLayout.setColumnStretch(1, 1)
+        self.compactStatsLayout.setColumnStretch(2, 1)
+        self.compactStatsLayout.setColumnStretch(3, 1)
+
+        self.compactLayout.addLayout(self.compactStatsLayout)
 
         self.compactMeter = BiteMeter(self.compactPage)
         self.compactMeter.setObjectName(u"compactMeter")
@@ -469,7 +628,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"GetTheFish", None))
         self.titleLabel.setText(QCoreApplication.translate("MainWindow", u"GetTheFish", None))
-        self.stateLabel.setText(QCoreApplication.translate("MainWindow", u"IDLE", None))
         self.themeButton.setText(QCoreApplication.translate("MainWindow", u"Light", None))
 #if QT_CONFIG(tooltip)
         self.themeButton.setToolTip(QCoreApplication.translate("MainWindow", u"Switch between light and dark mode", None))
@@ -501,7 +659,7 @@ class Ui_MainWindow(object):
         self.tuningGroup.setTitle(QCoreApplication.translate("MainWindow", u"Tuning", None))
         self.thresholdBobberLabel.setText(QCoreApplication.translate("MainWindow", u"Threshold Bobber", None))
 #if QT_CONFIG(tooltip)
-        self.thresholdBobberSpinBox.setToolTip(QCoreApplication.translate("MainWindow", u"Per-channel RGB tolerance when searching the bobber (pink pixels in the preview)", None))
+        self.thresholdBobberSpinBox.setToolTip(QCoreApplication.translate("MainWindow", u"Per-channel RGB tolerance when searching for the bobber colour", None))
 #endif // QT_CONFIG(tooltip)
         self.thresholdCatchLabel.setText(QCoreApplication.translate("MainWindow", u"Threshold Catch", None))
 #if QT_CONFIG(tooltip)
@@ -510,29 +668,53 @@ class Ui_MainWindow(object):
         self.jumpToBobberCheck.setText(QCoreApplication.translate("MainWindow", u"Jump to Bobber", None))
         self.verboseCheck.setText(QCoreApplication.translate("MainWindow", u"Verbose Log", None))
         self.startButton.setText(QCoreApplication.translate("MainWindow", u"Start", None))
+        self.sessionGroup.setTitle(QCoreApplication.translate("MainWindow", u"Statistics", None))
+        self.castsCaption.setText(QCoreApplication.translate("MainWindow", u"Casts", None))
+        self.castsValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.todayCastsValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.totalCastsValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.catchesCaption.setText(QCoreApplication.translate("MainWindow", u"Catches", None))
+        self.catchesValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.todayCatchesValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.totalCatchesValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.missesCaption.setText(QCoreApplication.translate("MainWindow", u"Misses", None))
+        self.missesValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.todayMissesValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.totalMissesValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.rateCaption.setText(QCoreApplication.translate("MainWindow", u"Catch rate", None))
+        self.rateValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.todayRateValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.totalRateValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.perHourCaption.setText(QCoreApplication.translate("MainWindow", u"Fish / hour", None))
+        self.perHourValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.todayPerHourValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.totalPerHourValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.elapsedCaption.setText(QCoreApplication.translate("MainWindow", u"Fishing time", None))
+        self.elapsedValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.todayElapsedValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.totalElapsedValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.sessionLabel.setText(QCoreApplication.translate("MainWindow", u"Session", None))
+        self.todayLabel.setText(QCoreApplication.translate("MainWindow", u"Today", None))
+        self.totalLabel.setText(QCoreApplication.translate("MainWindow", u"Total", None))
+        self.roundsLabel.setText(QCoreApplication.translate("MainWindow", u"Last rounds", None))
+        self.meterGroup.setTitle(QCoreApplication.translate("MainWindow", u"Bite meter", None))
         self.logGroup.setTitle(QCoreApplication.translate("MainWindow", u"Log", None))
         self.openConfigFolderButton.setText(QCoreApplication.translate("MainWindow", u"Open Config/Logs Folder", None))
-        self.sessionGroup.setTitle(QCoreApplication.translate("MainWindow", u"Session", None))
-        self.castsValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
-        self.castsCaption.setText(QCoreApplication.translate("MainWindow", u"Casts", None))
-        self.catchesValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
-        self.catchesCaption.setText(QCoreApplication.translate("MainWindow", u"Catches", None))
-        self.missesValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
-        self.missesCaption.setText(QCoreApplication.translate("MainWindow", u"Misses", None))
-        self.rateValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
-        self.rateCaption.setText(QCoreApplication.translate("MainWindow", u"Catch rate", None))
-        self.perHourValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
-        self.perHourCaption.setText(QCoreApplication.translate("MainWindow", u"Fish / hour", None))
-        self.elapsedValue.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
-        self.elapsedCaption.setText(QCoreApplication.translate("MainWindow", u"Time", None))
-        self.previewGroup.setTitle(QCoreApplication.translate("MainWindow", u"Preview", None))
-#if QT_CONFIG(tooltip)
-        self.previewView.setToolTip(QCoreApplication.translate("MainWindow", u"Check your area and colour before fishing: pink pixels match the bobber colour, the circle is where the bobber would be found", None))
-#endif // QT_CONFIG(tooltip)
-        self.previewInfoLabel.setText("")
-        self.previewCheck.setText(QCoreApplication.translate("MainWindow", u"Show", None))
-        self.meterGroup.setTitle(QCoreApplication.translate("MainWindow", u"Bite meter", None))
         self.compactStartButton.setText(QCoreApplication.translate("MainWindow", u"Start", None))
-        self.compactStatsLabel.setText("")
+        self.compactCaughtCaption.setText(QCoreApplication.translate("MainWindow", u"Caught", None))
+        self.compactRateCaption.setText(QCoreApplication.translate("MainWindow", u"Rate", None))
+        self.compactTimeCaption.setText(QCoreApplication.translate("MainWindow", u"Time", None))
+        self.compactSessionLabel.setText(QCoreApplication.translate("MainWindow", u"Session", None))
+        self.compactSessionCatches.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.compactSessionRate.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.compactSessionTime.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.compactTodayLabel.setText(QCoreApplication.translate("MainWindow", u"Today", None))
+        self.compactTodayCatches.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.compactTodayRate.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.compactTodayTime.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.compactTotalLabel.setText(QCoreApplication.translate("MainWindow", u"Total", None))
+        self.compactTotalCatches.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.compactTotalRate.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
+        self.compactTotalTime.setText(QCoreApplication.translate("MainWindow", u"\u2013", None))
     # retranslateUi
 

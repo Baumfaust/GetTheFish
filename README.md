@@ -3,8 +3,9 @@
 [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
 An automated fishing tool. It casts the line, finds the bobber by its colour,
-watches it for a bite and reels the fish in. A small PySide6 GUI lets you pick
-the bobber colour and the search area directly on screen.
+watches it for a bite and reels the fish in. A PySide6 GUI lets you pick the
+bobber colour and the search area directly on screen, shows each round live and
+keeps statistics. A compact view fits beside the game in windowed mode.
 
 > **Note:** The tool moves the mouse and reads the screen. Only use it where
 > automation is allowed by the game's terms of service.
@@ -53,19 +54,24 @@ getthefish --help   # options: --config PATH, --verbose
 In the GUI:
 
 - **Set Area** – drag a rectangle over the water where the bobber lands. Esc or right-click cancels.
-- **Select Color** – click on the bobber in the frozen screenshot. Esc cancels.
+- **Pick Color** – click on the bobber in the frozen screenshot; a magnifier next to the cursor
+  shows the exact pixel and its value. Esc cancels.
 - **Cast Key** – the key the *Fishing* spell is on in your action bar (default `0`).
   Names follow pyautogui: `0`–`9`, `a`–`z`, `f1`–`f12`, `num0`–`num9`, …
 - **Threshold Bobber / Threshold Catch** – per-channel RGB tolerance for finding the bobber and for detecting a bite.
 - **Jump to Bobber** – keep the cursor on the bobber while waiting; otherwise it returns to where it was after reeling in.
 - **Start / Stop** – run the fishing loop in the background.
-- **Preview** – a setup aid: shows the search area with the pixels matching the bobber colour
-  (at the current *Threshold Bobber*) in pink and the detected bobber circled. Stray pink
-  pixels away from the bobber mean the threshold is too loose. Paused while fishing.
+- **Status LED** – next to the title: Casting, Searching bobber, Waiting for bite, Bite! Reeling
+  in, then the result of the round (Caught, Missed, No bobber).
+- **Last rounds** – the last 30 rounds as dots: green caught, orange missed, red no bobber.
+  Many orange dots usually mean *Threshold Catch* is too high, many red ones that the colour,
+  *Threshold Bobber* or the area does not fit.
 - **Bite Meter** – live graph of how much the watched pixel changes. The dashed line is
   *Threshold Catch*; click or drag in the graph to move it. Thresholds stay editable while
   fishing so you can tune them live.
-- **Session** – casts, catches, misses, catch rate, fish per hour and session time.
+- **Statistics** – casts, catches, misses, catch rate, fish per hour and fishing time for the
+  *Session* (since the program started, over all Start/Stop runs), *Today* and *Total*.
+  Daily numbers are kept in `stats.json` next to `config.json`.
 - **Log** – the latest messages; enable *Verbose Log* for every search and bite detail.
 - **Compact / Expand** – a small view with Start/Stop, stats and the bite meter, meant to sit
   beside the game in windowed mode. Start switches to it automatically and the previous view
@@ -74,8 +80,6 @@ In the GUI:
 
 Keep this window out of the fishing area: the cast clicks into the area to focus the game, so
 a window covering it swallows the click. Start refuses to run while the window overlaps it.
-
-When picking the colour, a magnifier next to the cursor shows the exact pixel and its value.
 
 To stop the headless version press **Ctrl+C**. In both modes moving the mouse
 into a screen corner triggers the emergency stop.
@@ -89,6 +93,10 @@ Settings are saved automatically to a per-user file:
 | Windows | `%APPDATA%\getthefish\config.json` |
 | macOS | `~/Library/Application Support/getthefish/config.json` |
 | Linux | `$XDG_CONFIG_HOME/getthefish/config.json` (default `~/.config/...`) |
+
+The same folder holds `getthefish.log`, the daily statistics (`stats.json`) and
+the window preferences (`window.ini`: theme, view, window positions). The
+*Open Config/Logs Folder* button opens it.
 
 Set `GETTHEFISH_CONFIG` or pass `--config` to use another file. A
 `config.json` from older versions in the current directory is imported
@@ -121,7 +129,7 @@ by the right-click.
 
 ## Troubleshooting
 
-Enable **verbose** in the GUI (or run `getthefish -v`) and check the log file
+Enable **Verbose Log** in the GUI (or run `getthefish -v`) and check the log file
 `getthefish.log` in the same folder as `config.json`. Each cast logs, for example:
 
 ```
@@ -130,6 +138,10 @@ Watching pixel 643, 217 with colour (74, 40, 13)
 No bite within 20s: largest colour change was 41, threshold_catch is 60
 ```
 
+- **Nothing is cast, then "Bobber not found" three times** – something covers
+  the top-left corner of the area, where the cast clicks to focus the game
+  (often this window). Move it beside the game; Start checks this for its own
+  window.
 - **Set the area over water only.** Dark wood (boat), the character and UI
   bars contain the same dark red/brown as the bobber; if they are inside the
   area the bot locks onto them and never sees a bite.
@@ -154,8 +166,12 @@ src/getthefish/
 ├── detection.py       # pure numpy colour detection
 ├── devices.py         # screen capture (mss) and mouse (pyautogui) adapters
 ├── logs.py            # console + log file setup
+├── tally.py           # statistics and the per-day history (stats.json)
 └── gui/
-    ├── main_window.py # PySide6 GUI
+    ├── main_window.py # main window, colour picker and area selector
+    ├── widgets.py     # status LED, bite meter, round history, log bridge
+    ├── theme.py       # light and dark theme
+    ├── icon.py        # application icon (also writes the .ico for the exe)
     ├── main.ui        # Qt Designer source
     └── ui_main.py     # generated from main.ui
 tests/                 # pytest suite (no real screen or mouse needed)
@@ -176,6 +192,12 @@ uv build
 ```
 
 `uv.lock` is the committed, cross-platform dependency lockfile.
+
+After editing `main.ui` in Qt Designer, regenerate the Python code:
+
+```bash
+uv run pyside6-uic src/getthefish/gui/main.ui -o src/getthefish/gui/ui_main.py
+```
 
 ## License
 

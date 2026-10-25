@@ -1,104 +1,154 @@
-"""Custom-painted widgets: live preview, bite meter and a log bridge."""
+"""Custom-painted widgets: status LED, bite meter, round history and a log bridge."""
 
 from __future__ import annotations
 
 import contextlib
 import logging
+import math
 from collections import deque
 
-import numpy as np
-import numpy.typing as npt
-from PySide6.QtCore import QObject, QPointF, QRectF, Qt, Signal
+from PySide6.QtCore import QObject, QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QColor,
-    QImage,
+    QFont,
+    QFontMetrics,
     QMouseEvent,
     QPainter,
     QPainterPath,
     QPaintEvent,
     QPen,
+    QRadialGradient,
 )
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QSizePolicy, QWidget
 
-from getthefish.config import Point
-from getthefish.detection import Image
 from getthefish.gui import theme
 
 
-def _rgb_image(image: Image) -> QImage:
-    h, w, _ = image.shape
-    data = np.ascontiguousarray(image)
-    return QImage(data.data, w, h, 3 * w, QImage.Format.Format_RGB888).copy()
+class StatusLed(QWidget):
+    """A tinted pill with a glowing dot and the current state.
 
-
-def _mask_image(mask: npt.NDArray[np.bool_], color: QColor) -> QImage:
-    h, w = mask.shape
-    rgba = np.zeros((h, w, 4), dtype=np.uint8)
-    rgba[mask] = (color.red(), color.green(), color.blue(), 220)
-    return QImage(rgba.data, w, h, 4 * w, QImage.Format.Format_RGBA8888).copy()
-
-
-class PreviewView(QWidget):
-    """The search area with the pixels matching the bobber colour and the detected bobber.
-
-    Points are relative to the top-left corner of the frame.
+    While ``pulse`` is on the glow breathes slowly, to show the loop is busy.
     """
+
+    DOT = 8.0
+    PAD = 10.0
+    PULSE_MS = 1600
+    WIDEST = "Waiting for bite"
+    """Width reserved for the text, so the header does not jump when the state changes."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setMinimumSize(240, 140)
-        self._frame: QImage | None = None
-        self._mask: QImage | None = None
-        self._found: Point | None = None
-        self._message = "Preview off"
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.text = "Idle"
+        self.tone = ""
+        self.pulse = False
+        self._phase = 0.0
+        self._timer = QTimer(self)
+        self._timer.setInterval(40)
+        self._timer.timeout.connect(self._tick)
 
-    def set_frame(
-        self, image: Image, mask: npt.NDArray[np.bool_] | None, found: Point | None
-    ) -> None:
-        self._frame = _rgb_image(image)
-        self._mask = None if mask is None else _mask_image(mask, QColor(theme.colors().match))
-        self._found = found
+    def set_state(self, text: str, tone: str, *, pulse: bool) -> None:
+        """``tone`` is a theme colour name (accent, success, warn, danger) or empty for idle."""
+        self.text, self.tone, self.pulse = text, tone, pulse
+        if pulse and not self._timer.isActive():
+            self._phase = 0.0
+            self._timer.start()
+        elif not pulse:
+            self._timer.stop()
+        self.setToolTip(text)
         self.update()
 
-    def set_message(self, text: str) -> None:
-        """Show ``text`` instead of a frame."""
-        self._frame = self._mask = None
-        self._message = text
+    def _tick(self) -> None:
+        self._phase = (self._phase + self._timer.interval() / self.PULSE_MS) % 1.0
         self.update()
 
-    def _target(self) -> QRectF:
-        assert self._frame is not None
-        fw, fh = self._frame.width(), self._frame.height()
-        scale = min(self.width() / fw, self.height() / fh)
-        w, h = fw * scale, fh * scale
-        return QRectF((self.width() - w) / 2, (self.height() - h) / 2, w, h)
+    def _font(self) -> QFont:
+        font = QFont(self.font())
+        font.setWeight(QFont.Weight.DemiBold)
+        return font
+
+    def sizeHint(self) -> QSize:  # noqa: N802
+        fm = QFontMetrics(self._font())
+        width = max(fm.horizontalAdvance(self.WIDEST), fm.horizontalAdvance(self.text))
+        return QSize(round(self.PAD * 2.5 + self.DOT + width), max(26, fm.height() + 10))
 
     def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802
         c = theme.colors()
+        color = QColor(getattr(c, self.tone) if self.tone else c.muted)
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.fillRect(self.rect(), QColor(c.sunken))
-        if self._frame is None:
-            p.setPen(QColor(c.muted))
-            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self._message)
-            return
-        target = self._target()
-        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        p.drawImage(target, self._frame)
-        if self._mask is not None:
-            p.drawImage(target, self._mask)
-        if self._found is not None:
-            scale = target.width() / self._frame.width()
-            center = QPointF(
-                target.left() + (self._found.x + 0.5) * scale,
-                target.top() + (self._found.y + 0.5) * scale,
-            )
-            p.setPen(QPen(QColor(c.accent), 2))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawEllipse(center, 12, 12)
-        p.setPen(QPen(QColor(c.border), 1))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawRect(target)
+        pill = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+        radius = pill.height() / 2
+        fill, edge = QColor(color), QColor(color)
+        fill.setAlphaF(0.10 if self.tone else 0.06)
+        edge.setAlphaF(0.35)
+        p.setPen(QPen(edge, 1))
+        p.setBrush(fill)
+        p.drawRoundedRect(pill, radius, radius)
+
+        center = QPointF(self.PAD + self.DOT / 2, pill.center().y())
+        if self.tone:
+            # 0..1..0 once per pulse period; a steady medium glow when not pulsing.
+            breath = 0.5 - 0.5 * math.cos(2 * math.pi * self._phase) if self.pulse else 0.5
+            glow_radius = self.DOT * (1.0 + 0.6 * breath)
+            glow = QRadialGradient(center, glow_radius)
+            inner = QColor(color)
+            inner.setAlphaF(0.25 + 0.35 * breath)
+            outer = QColor(color)
+            outer.setAlphaF(0.0)
+            glow.setColorAt(0.4, inner)
+            glow.setColorAt(1.0, outer)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(glow)
+            p.drawEllipse(center, glow_radius, glow_radius)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(color)
+        p.drawEllipse(center, self.DOT / 2, self.DOT / 2)
+
+        p.setFont(self._font())
+        p.setPen(color if self.tone else QColor(c.muted))
+        text_left = self.PAD * 1.5 + self.DOT
+        p.drawText(
+            QRectF(text_left, 0, self.width() - text_left - self.PAD, self.height()),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            self.text,
+        )
+
+
+class RoundHistory(QWidget):
+    """The outcome of the last rounds as dots, newest on the right."""
+
+    SIZE = 30
+    DOT = 8
+    GAP = 4
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setMinimumHeight(self.DOT + 4)
+        self.setToolTip("Last rounds: green caught, orange missed, red no bobber")
+        self.outcomes: deque[str] = deque(maxlen=self.SIZE)
+
+    def add(self, outcome: str) -> None:
+        """``outcome`` is ``caught``, ``missed`` or ``no_bobber``."""
+        self.outcomes.append(outcome)
+        self.update()
+
+    def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802
+        c = theme.colors()
+        colors = {"caught": c.success, "missed": c.warn, "no_bobber": c.danger}
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setPen(Qt.PenStyle.NoPen)
+        y = (self.height() - self.DOT) / 2
+        fits = max(0, (self.width() + self.GAP) // (self.DOT + self.GAP))
+        shown = list(self.outcomes)[-fits:] if fits else []
+        # Empty slots first, so the newest dot always sits at the right edge.
+        slots = [None] * (min(fits, self.SIZE) - len(shown)) + shown
+        x = self.width() - len(slots) * (self.DOT + self.GAP) + self.GAP
+        for outcome in slots:
+            p.setBrush(QColor(c.grid if outcome is None else colors[outcome]))
+            p.drawEllipse(QRectF(x, y, self.DOT, self.DOT))
+            x += self.DOT + self.GAP
 
 
 class BiteMeter(QWidget):

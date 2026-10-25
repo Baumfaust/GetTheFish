@@ -8,6 +8,7 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from enum import StrEnum
 
 from getthefish.config import FishConfig, Point
 from getthefish.detection import find_color
@@ -44,6 +45,20 @@ class Stats:
     misses: int = 0
 
 
+class Phase(StrEnum):
+    """The step of a round the fishing loop is in."""
+
+    CASTING = "casting"
+    SEARCHING = "searching"
+    WAITING = "waiting"
+    REELING = "reeling"
+
+
+@dataclass(frozen=True)
+class PhaseChanged:
+    phase: Phase
+
+
 @dataclass(frozen=True)
 class BobberFound:
     """The bobber landed at ``position``; ``watch`` is the pixel observed for a bite."""
@@ -67,7 +82,7 @@ class RoundFinished:
     stats: Stats
 
 
-Event = BobberFound | BiteSample | RoundFinished
+Event = PhaseChanged | BobberFound | BiteSample | RoundFinished
 """Live data for a UI; sent from the fishing thread."""
 
 
@@ -128,6 +143,7 @@ class GetTheFish:
         is the GUI right after clicking Start. Left-click on water is harmless in
         the game (right-click could trigger click-to-move).
         """
+        self._emit(PhaseChanged(Phase.CASTING))
         self.mouse.move_to(self.config.start_pos)
         self.mouse.left_click()
         self.mouse.press(self.config.cast_key)
@@ -135,6 +151,7 @@ class GetTheFish:
 
     def find_bobber(self) -> Point | None:
         """Search the configured area; returns absolute screen coordinates."""
+        self._emit(PhaseChanged(Phase.SEARCHING))
         left, top, right, bottom = self.config.search_area
         for attempt in range(1, self.config.max_attempts + 1):
             self._status(
@@ -203,12 +220,16 @@ class GetTheFish:
             return None
         watch = Point(bobber.x + BITE_WATCH_OFFSET.x, bobber.y + BITE_WATCH_OFFSET.y)
         self._emit(BobberFound(bobber, watch))
+        self._emit(PhaseChanged(Phase.WAITING))
         if self.config.jump_to_bobber:
             self.mouse.move_to(watch)
         if not self.wait_for_bite(watch):
+            if not self.is_running:
+                return False
             self.stats.misses += 1
             self._status("No bite, recasting", verbose_only=True)
             return False
+        self._emit(PhaseChanged(Phase.REELING))
         if not self._sleep(self.timing.before_catch):
             return False
         self.reel_in(watch)

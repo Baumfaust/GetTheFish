@@ -47,7 +47,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from getthefish.bot import BiteSample, BobberFound, Event, GetTheFish, RoundFinished, Stats
+from getthefish.bot import (
+    BiteSample,
+    BobberFound,
+    Event,
+    GetTheFish,
+    PhaseChanged,
+    RoundFinished,
+    Stats,
+)
 from getthefish.config import (
     ConfigError,
     FishConfig,
@@ -56,22 +64,51 @@ from getthefish.config import (
     load_or_migrate,
     normalize_key,
 )
-from getthefish.detection import color_mask, locate_cluster
-from getthefish.devices import MssScreen, PyAutoGuiInput, ScreenSource, is_known_key
+from getthefish.devices import MssScreen, PyAutoGuiInput, is_known_key
 from getthefish.gui import theme
+from getthefish.gui.icon import app_icon
 from getthefish.gui.ui_main import Ui_MainWindow
 from getthefish.gui.widgets import QtLogHandler
 from getthefish.logs import setup_logging
+from getthefish.tally import STATS_FILENAME, DailyHistory, Tally
 
 logger = logging.getLogger(__name__)
 
 BotFactory = Callable[[FishConfig, Callable[[str], None]], GetTheFish]
 
-PREVIEW_INTERVAL_MS = 200
 UI_SETTINGS_FILENAME = "window.ini"
-FULL_SIZE = QSize(1040, 680)
-COMPACT_SIZE = QSize(320, 210)
+FULL_SIZE = QSize(1000, 600)
+COMPACT_SIZE = QSize(320, 230)
 NO_VALUE = "\N{EN DASH}"
+
+STATES = {
+    "idle": ("Idle", ""),
+    "stopping": ("Stopping", "warn"),
+    "casting": ("Casting", "accent"),
+    "searching": ("Searching bobber", "accent"),
+    "waiting": ("Waiting for bite", "accent"),
+    "reeling": ("Bite! Reeling in", "success"),
+    "caught": ("Caught", "success"),
+    "missed": ("Missed", "warn"),
+    "no_bobber": ("No bobber", "danger"),
+}
+"""Status LED: state -> (text, colour tone). Phases come from the fishing loop's events."""
+
+
+def _format_tally(tally: Tally, seconds: float) -> tuple[str, str, str, str, str, str]:
+    """Casts, catches, misses, catch rate, fish per hour and fishing time as display text."""
+    rate = tally.catch_rate
+    per_hour = tally.per_hour(seconds)
+    minutes, secs = divmod(int(seconds), 60)
+    hours, minutes = divmod(minutes, 60)
+    return (
+        str(tally.casts),
+        str(tally.catches),
+        str(tally.misses),
+        NO_VALUE if rate is None else f"{rate:.0f}%",
+        NO_VALUE if per_hour is None else f"{per_hour:.0f}",
+        f"{hours}:{minutes:02}:{secs:02}",
+    )
 
 
 def default_bot_factory(config: FishConfig, on_status: Callable[[str], None]) -> GetTheFish:
@@ -231,7 +268,6 @@ class MainWindow(QMainWindow):
         config: FishConfig,
         config_path: Path,
         bot_factory: BotFactory = default_bot_factory,
-        screen_factory: Callable[[], ScreenSource] = MssScreen,
     ) -> None:
         super().__init__()
         self.ui = Ui_MainWindow()
@@ -239,13 +275,17 @@ class MainWindow(QMainWindow):
         self.config = config
         self.config_path = config_path
         self.bot_factory = bot_factory
-        self.screen_factory = screen_factory
-        self.preview_screen: ScreenSource | None = None
         self.worker: FishingWorker | None = None
         self.overlay: ScreenOverlay | None = None
-        self.stats = Stats()
-        self.started_at: float | None = None
+        self.total = Tally()
+        """Statistics since the program started, over all fishing runs."""
+        self.history = DailyHistory(config_path.parent / STATS_FILENAME)
+        self.run_stats = Stats()
+        """Running counts of the current fishing run, as last reported by it."""
+        self.tick: float | None = None
+        """When fishing time was last booked; None while not fishing."""
         self.compact_before_session = False
+        self.stopping = False
         self.dark = False
         self.compact = False
         # Window preferences (theme, view, positions) live next to config.json.
@@ -253,6 +293,7 @@ class MainWindow(QMainWindow):
             str(config_path.parent / UI_SETTINGS_FILENAME), QSettings.Format.IniFormat
         )
         self.meters = (self.ui.biteMeter, self.ui.compactMeter)
+        self.round_histories = (self.ui.roundHistory, self.ui.compactRoundHistory)
         self.start_buttons = (self.ui.startButton, self.ui.compactStartButton)
 
         for spin in (self.ui.thresholdBobberSpinBox, self.ui.thresholdCatchSpinBox):
@@ -264,9 +305,6 @@ class MainWindow(QMainWindow):
         self.log_handler.message.connect(self.ui.logView.appendPlainText)
         logging.getLogger("getthefish").addHandler(self.log_handler)
 
-        self.preview_timer = QTimer(self)
-        self.preview_timer.setInterval(PREVIEW_INTERVAL_MS)
-        self.preview_timer.timeout.connect(self.update_preview)
         self.clock_timer = QTimer(self)
         self.clock_timer.setInterval(1000)
         self.clock_timer.timeout.connect(self.show_stats)
@@ -283,7 +321,6 @@ class MainWindow(QMainWindow):
         self.ui.jumpToBobberCheck.stateChanged.connect(self.settings_changed)
         self.ui.verboseCheck.stateChanged.connect(self.settings_changed)
         self.ui.castKeyEdit.editingFinished.connect(self.cast_key_changed)
-        self.ui.previewCheck.toggled.connect(self.update_preview_timer)
         self.ui.themeButton.clicked.connect(lambda: self.set_dark(not self.dark))
         self.ui.viewButton.clicked.connect(lambda: self.set_compact(not self.compact))
 
@@ -398,44 +435,68 @@ class MainWindow(QMainWindow):
             page.setSizePolicy(policy, policy)
         self.ui.pages.setCurrentWidget(current)
         self.ui.viewButton.setText("Expand" if self.compact else "Compact")
+        self.ui.titleLabel.setVisible(not self.compact)  # room for the status LED
         geometry = self.settings.value(self._geometry_key())
         if not (isinstance(geometry, QByteArray) and self.restoreGeometry(geometry)):
             self.resize(COMPACT_SIZE if self.compact else FULL_SIZE)
-        self.update_preview_timer()
 
     def show_state(self, state: str) -> None:
-        """Update the state pill and the start buttons (state: idle, fishing or stopping)."""
-        self.ui.stateLabel.setText(state.upper())
-        self.ui.stateLabel.setProperty("state", state)
-        for w in (self.ui.stateLabel, *self.start_buttons):
-            w.setProperty("fishing", state == "fishing")
-            w.style().unpolish(w)
-            w.style().polish(w)
+        """Update the status LED and the start buttons (``state`` is a key of STATES)."""
+        text, tone = STATES[state]
+        # The steps of a round breathe; results and idle hold still.
+        self.ui.statusLed.set_state(text, tone, pulse=tone == "accent")
+        for button in self.start_buttons:
+            button.setProperty("fishing", self.is_fishing)
+            button.style().unpolish(button)
+            button.style().polish(button)
 
     def set_start_button(self, text: str, *, enabled: bool = True) -> None:
         for button in self.start_buttons:
             button.setText(text)
             button.setEnabled(enabled)
 
+    def record(self, run_stats: Stats | None = None) -> None:
+        """Add what happened since the last call to the totals and to today's history.
+
+        ``run_stats`` are the running counts of the current fishing run.
+        """
+        now = time.monotonic()
+        delta = Tally(seconds=0.0 if self.tick is None else now - self.tick)
+        self.tick = None if self.tick is None else now
+        if run_stats is not None:
+            delta.casts = run_stats.casts - self.run_stats.casts
+            delta.catches = run_stats.catches - self.run_stats.catches
+            delta.misses = run_stats.misses - self.run_stats.misses
+            self.run_stats = run_stats
+        self.total.add(delta)
+        self.history.today().add(delta)
+        self.history.save()
+        self.show_stats()
+
     def show_stats(self) -> None:
-        s = self.stats
-        rate = f"{100 * s.catches / s.casts:.0f}%" if s.casts else NO_VALUE
-        elapsed = 0.0 if self.started_at is None else time.monotonic() - self.started_at
-        # Fish per hour is meaningless (and jumpy) in the first minute.
-        per_hour = f"{s.catches / elapsed * 3600:.0f}" if elapsed >= 60 else NO_VALUE
-        minutes, seconds = divmod(int(elapsed), 60)
-        hours, minutes = divmod(minutes, 60)
-        clock = f"{hours}:{minutes:02}:{seconds:02}"
-        self.ui.castsValue.setText(str(s.casts))
-        self.ui.catchesValue.setText(str(s.catches))
-        self.ui.missesValue.setText(str(s.misses))
-        self.ui.rateValue.setText(rate)
-        self.ui.perHourValue.setText(per_hour)
-        self.ui.elapsedValue.setText(clock)
-        self.ui.compactStatsLabel.setText(
-            f"{s.catches} caught \N{MIDDLE DOT} {s.casts} casts \N{MIDDLE DOT} {rate} "
-            f"\N{MIDDLE DOT} {clock}"
-        )
+        running = 0.0 if self.tick is None else time.monotonic() - self.tick
+        u = self.ui
+        # Per row: the tally, its six full-view labels and its three compact-view labels.
+        rows = (
+            (self.total,
+             (u.castsValue, u.catchesValue, u.missesValue, u.rateValue, u.perHourValue,
+              u.elapsedValue),
+             (u.compactSessionCatches, u.compactSessionRate, u.compactSessionTime)),
+            (self.history.today(),
+             (u.todayCastsValue, u.todayCatchesValue, u.todayMissesValue, u.todayRateValue,
+              u.todayPerHourValue, u.todayElapsedValue),
+             (u.compactTodayCatches, u.compactTodayRate, u.compactTodayTime)),
+            (self.history.total(),
+             (u.totalCastsValue, u.totalCatchesValue, u.totalMissesValue, u.totalRateValue,
+              u.totalPerHourValue, u.totalElapsedValue),
+             (u.compactTotalCatches, u.compactTotalRate, u.compactTotalTime)),
+        )  # fmt: skip
+        for tally, full, compact in rows:
+            texts = _format_tally(tally, tally.seconds + running)
+            for label, text in zip(full, texts, strict=True):
+                label.setText(text)
+            for label, text in zip(compact, (texts[1], texts[3], texts[5]), strict=True):
+                label.setText(text)
 
     def handle_event(self, event: Event) -> None:
         """Live data from the fishing thread."""
@@ -445,42 +506,22 @@ class MainWindow(QMainWindow):
                     meter.reset()
                 case BiteSample(change=change):
                     meter.add_sample(change)
-        if isinstance(event, RoundFinished):
-            self.stats = event.stats
-            self.show_stats()
-
-    def update_preview_timer(self) -> None:
-        """The preview is a setup aid: it only runs in the full view and outside a session."""
-        if self.compact or self.is_fishing:
-            self.preview_timer.stop()
-            self.ui.previewView.set_message("Preview pauses while fishing")
-        elif self.ui.previewCheck.isChecked():
-            self.preview_timer.start()
-            self.update_preview()
-            return
-        else:
-            self.preview_timer.stop()
-            self.ui.previewView.set_message("Preview off")
-        self.ui.previewInfoLabel.clear()
-
-    def update_preview(self) -> None:
-        """Grab the search area and highlight the pixels that match the bobber colour."""
-        try:
-            if self.preview_screen is None:
-                self.preview_screen = self.screen_factory()
-            image = self.preview_screen.grab(self.config.search_area)
-        except Exception as e:
-            logger.warning("Preview unavailable: %s", e)
-            self.ui.previewCheck.setChecked(False)
-            self.ui.previewView.set_message(f"Preview unavailable: {e}")
-            return
-        mask = color_mask(image, self.config.bobber_color, self.config.threshold_bobber)
-        found = locate_cluster(mask)
-        self.ui.previewView.set_frame(image, mask, found)
-        where = "no bobber" if found is None else f"bobber at {found.x}, {found.y}"
-        self.ui.previewInfoLabel.setText(
-            f"{int(mask.sum()):,} matching pixels \N{MIDDLE DOT} {where}"
-        )
+        match event:
+            case PhaseChanged(phase=phase) if not self.stopping:
+                self.show_state(phase.value)
+            case RoundFinished(result=result, stats=stats):
+                if stats.catches > self.run_stats.catches:
+                    outcome: str | None = "caught"
+                elif stats.misses > self.run_stats.misses:
+                    outcome = "missed"
+                else:  # a round interrupted by Stop has no outcome
+                    outcome = "no_bobber" if result is None else None
+                if outcome is not None:
+                    for history in self.round_histories:
+                        history.add(outcome)
+                    if not self.stopping:
+                        self.show_state(outcome)
+                self.record(stats)
 
     def covers_search_area(self) -> bool:
         """True if this window hides part of the water or the click that focuses the game."""
@@ -507,6 +548,7 @@ class MainWindow(QMainWindow):
             assert self.worker is not None
             self.worker.stop()
             self.set_start_button("Stopping...", enabled=False)
+            self.stopping = True
             self.show_state("stopping")
             return
         self.compact_before_session = self.compact
@@ -526,23 +568,24 @@ class MainWindow(QMainWindow):
         self.worker.finished.connect(self.fishing_finished)
         self.set_editing_enabled(False)
         self.set_start_button("Stop")
-        self.show_state("fishing")
-        self.stats = Stats()
-        self.started_at = time.monotonic()
+        self.run_stats = Stats()
+        self.tick = time.monotonic()
         for meter in self.meters:
             meter.reset()
-        self.show_stats()
         self.clock_timer.start()
         self.worker.start()
-        self.update_preview_timer()
+        self.show_state("casting")
 
     def fishing_finished(self) -> None:
         self.set_editing_enabled(True)
         self.set_start_button("Start")
+        self.stopping = False
         self.show_state("idle")
         self.clock_timer.stop()
+        self.record()  # books the fishing time since the last round
+        self.tick = None
+        self.show_stats()
         self.set_compact(self.compact_before_session)
-        self.update_preview_timer()
 
     def set_editing_enabled(self, enabled: bool) -> None:
         """Lock what a running session depends on; thresholds stay editable for live tuning."""
@@ -569,7 +612,6 @@ class MainWindow(QMainWindow):
         overlay.showFullScreen()
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
-        self.preview_timer.stop()
         self.clock_timer.stop()
         self.settings.setValue(self._geometry_key(), self.saveGeometry())
         self.settings.sync()
@@ -581,7 +623,13 @@ class MainWindow(QMainWindow):
 
 
 def main() -> int:
+    if sys.platform == "win32":
+        import ctypes
+
+        # Own taskbar entry and icon instead of grouping under python.exe.
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Baumfaust.GetTheFish")
     app = QApplication(sys.argv)
+    app.setWindowIcon(app_icon())
     config_path = default_config_path()
     if log_file := setup_logging(config_path.parent):
         logging.info("Logging to %s", log_file)

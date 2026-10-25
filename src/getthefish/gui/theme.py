@@ -20,8 +20,6 @@ class Colors:
     muted: str
     accent: str
     on_accent: str
-    match: str
-    """Pixels matching the bobber colour in the preview."""
     warn: str
     danger: str
     success: str
@@ -37,7 +35,6 @@ DARK = Colors(
     muted="#8a9099",
     accent="#4f8cff",
     on_accent="#ffffff",
-    match="#ff4fd8",
     warn="#f2a33a",
     danger="#e5484d",
     success="#3dd68c",
@@ -53,7 +50,6 @@ LIGHT = Colors(
     muted="#6b7280",
     accent="#2563eb",
     on_accent="#ffffff",
-    match="#d61fb4",
     warn="#c2780a",
     danger="#d93036",
     success="#1a9e5c",
@@ -84,14 +80,8 @@ QGroupBox {{
 QGroupBox::title {{ subcontrol-origin: margin; left: 2px; top: 0; color: {c.muted}; }}
 
 QLabel#titleLabel {{ font-size: 11pt; font-weight: 600; }}
-QLabel#previewInfoLabel, QLabel[caption="true"] {{ color: {c.muted}; font-size: 8pt; }}
-QLabel#stateLabel {{
-    border: 1px solid {c.border}; border-radius: 9px; padding: 1px 9px;
-    font-size: 8pt; font-weight: 600; color: {c.muted};
-}}
-QLabel#stateLabel[state="fishing"] {{ border-color: {c.success}; color: {c.success}; }}
-QLabel#stateLabel[state="stopping"] {{ border-color: {c.warn}; color: {c.warn}; }}
-QLabel[statValue="true"] {{ font-size: 13pt; font-weight: 600; }}
+QLabel[caption="true"] {{ color: {c.muted}; font-size: 8pt; }}
+QLabel[statValue="true"] {{ font-size: 11pt; font-weight: 600; }}
 
 QLineEdit, QPlainTextEdit {{
     background: {c.sunken}; border: 1px solid {c.border}; border-radius: 5px; padding: 3px 6px;

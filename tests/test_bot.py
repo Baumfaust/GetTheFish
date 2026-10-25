@@ -12,6 +12,8 @@ from getthefish.bot import (
     BobberFound,
     Event,
     GetTheFish,
+    Phase,
+    PhaseChanged,
     RoundFinished,
 )
 from getthefish.config import FishConfig, Point
@@ -92,11 +94,25 @@ def test_events_are_emitted(config: FishConfig) -> None:
     screen = FakeScreen(lambda n: scene(bite=n >= 3))
     bot = GetTheFish(config, screen, FakeMouse(), NO_DELAY, on_event=events.append)
     bot.fish_once()
-    found = events[0]
-    assert isinstance(found, BobberFound)
+    found = next(e for e in events if isinstance(e, BobberFound))
     assert found.watch == Point(60 + BITE_WATCH_OFFSET.x, 40 + BITE_WATCH_OFFSET.y)
     changes = [e.change for e in events if isinstance(e, BiteSample)]
     assert changes[0] == 0 and changes[-1] > config.threshold_catch
+
+
+def test_phases_are_emitted_in_order(config: FishConfig) -> None:
+    events: list[Event] = []
+    screen = FakeScreen(lambda n: scene(bite=n >= 3))
+    GetTheFish(config, screen, FakeMouse(), NO_DELAY, on_event=events.append).fish_once()
+    phases = [e.phase for e in events if isinstance(e, PhaseChanged)]
+    assert phases == [Phase.CASTING, Phase.SEARCHING, Phase.WAITING, Phase.REELING]
+
+
+def test_stop_while_waiting_is_not_a_miss(config: FishConfig) -> None:
+    bot = make_bot(config, FakeScreen(scene()))
+    bot.on_event = lambda e: bot.stop() if isinstance(e, BiteSample) else None
+    assert bot.fish_once() is False
+    assert bot.stats.misses == 0
 
 
 def test_run_reports_each_round(config: FishConfig) -> None:

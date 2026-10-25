@@ -40,15 +40,10 @@ def find_color(
     image) - the same anchor the original first-match search used, so the
     bite-watch offset stays valid.
     """
-    return locate_cluster(color_mask(image, color, threshold), cell_size)
-
-
-def locate_cluster(mask: npt.NDArray[np.bool_], cell_size: int = CLUSTER_CELL_SIZE) -> Point | None:
-    """The anchor pixel :func:`find_color` reports, computed from a precomputed mask."""
-    ys, xs = np.nonzero(mask)
+    ys, xs = np.nonzero(color_mask(image, color, threshold))
     if len(xs) == 0:
         return None
-    cells = (ys // cell_size) * (mask.shape[1] // cell_size + 1) + (xs // cell_size)
+    cells = (ys // cell_size) * (image.shape[1] // cell_size + 1) + (xs // cell_size)
     in_cell = cells == int(np.argmax(np.bincount(cells)))
     cx, cy = xs[in_cell].mean(), ys[in_cell].mean()
     near = (np.abs(xs - cx) <= 2 * cell_size) & (np.abs(ys - cy) <= 2 * cell_size)

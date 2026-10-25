@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1040</width>
-    <height>680</height>
+    <width>1000</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,11 +43,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="stateLabel">
-        <property name="text">
-         <string>IDLE</string>
-        </property>
-       </widget>
+       <widget class="StatusLed" name="statusLed" />
       </item>
       <item>
        <spacer name="headerSpacer">
@@ -307,7 +303,7 @@
              <item row="0" column="1">
               <widget class="QSpinBox" name="thresholdBobberSpinBox">
                <property name="toolTip">
-                <string>Per-channel RGB tolerance when searching the bobber (pink pixels in the preview)</string>
+                <string>Per-channel RGB tolerance when searching for the bobber colour</string>
                </property>
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -393,75 +389,40 @@
            </layout>
           </item>
           <item>
-           <widget class="QGroupBox" name="logGroup">
-            <property name="title">
-             <string>Log</string>
+           <spacer name="leftSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
             </property>
-            <property name="minimumSize">
+            <property name="sizeHint">
              <size>
-              <width>320</width>
-              <height>0</height>
+              <width>0</width>
+              <height>10</height>
              </size>
             </property>
-            <property name="maximumSize">
-             <size>
-              <width>320</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <layout class="QVBoxLayout" name="logLayout">
-             <item>
-              <widget class="QPlainTextEdit" name="logView">
-               <property name="readOnly">
-                <bool>true</bool>
-               </property>
-               <property name="maximumBlockCount">
-                <number>500</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="openConfigFolderButton">
-               <property name="text">
-                <string>Open Config/Logs Folder</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
+           </spacer>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="rightColumn" stretch="0,1,0">
+         <layout class="QVBoxLayout" name="rightColumn" stretch="0,0,1">
           <property name="spacing">
            <number>4</number>
           </property>
           <item>
            <widget class="QGroupBox" name="sessionGroup">
             <property name="title">
-             <string>Session</string>
+             <string>Statistics</string>
             </property>
-            <layout class="QHBoxLayout" name="statsLayout">
+            <layout class="QVBoxLayout" name="sessionLayout">
              <property name="spacing">
-              <number>8</number>
+              <number>10</number>
              </property>
              <item>
-              <layout class="QVBoxLayout" name="castsLayout">
+              <layout class="QGridLayout" name="statsLayout">
                <property name="spacing">
-                <number>0</number>
+                <number>6</number>
                </property>
-               <item>
-                <widget class="QLabel" name="castsValue">
-                 <property name="text">
-                  <string>–</string>
-                 </property>
-                 <property name="statValue" stdset="0">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
+               <item row="0" column="1">
                 <widget class="QLabel" name="castsCaption">
                  <property name="text">
                   <string>Casts</string>
@@ -471,15 +432,8 @@
                  </property>
                 </widget>
                </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="catchesLayout">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="catchesValue">
+               <item row="1" column="1">
+                <widget class="QLabel" name="castsValue">
                  <property name="text">
                   <string>–</string>
                  </property>
@@ -488,7 +442,27 @@
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="2" column="1">
+                <widget class="QLabel" name="todayCastsValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLabel" name="totalCastsValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
                 <widget class="QLabel" name="catchesCaption">
                  <property name="text">
                   <string>Catches</string>
@@ -498,15 +472,8 @@
                  </property>
                 </widget>
                </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="missesLayout">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="missesValue">
+               <item row="1" column="2">
+                <widget class="QLabel" name="catchesValue">
                  <property name="text">
                   <string>–</string>
                  </property>
@@ -515,7 +482,27 @@
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="2" column="2">
+                <widget class="QLabel" name="todayCatchesValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QLabel" name="totalCatchesValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
                 <widget class="QLabel" name="missesCaption">
                  <property name="text">
                   <string>Misses</string>
@@ -525,15 +512,8 @@
                  </property>
                 </widget>
                </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="rateLayout">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="rateValue">
+               <item row="1" column="3">
+                <widget class="QLabel" name="missesValue">
                  <property name="text">
                   <string>–</string>
                  </property>
@@ -542,7 +522,27 @@
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="2" column="3">
+                <widget class="QLabel" name="todayMissesValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="3">
+                <widget class="QLabel" name="totalMissesValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="4">
                 <widget class="QLabel" name="rateCaption">
                  <property name="text">
                   <string>Catch rate</string>
@@ -552,15 +552,8 @@
                  </property>
                 </widget>
                </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="perHourLayout">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QLabel" name="perHourValue">
+               <item row="1" column="4">
+                <widget class="QLabel" name="rateValue">
                  <property name="text">
                   <string>–</string>
                  </property>
@@ -569,7 +562,27 @@
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="2" column="4">
+                <widget class="QLabel" name="todayRateValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="4">
+                <widget class="QLabel" name="totalRateValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="5">
                 <widget class="QLabel" name="perHourCaption">
                  <property name="text">
                   <string>Fish / hour</string>
@@ -579,14 +592,47 @@
                  </property>
                 </widget>
                </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="elapsedLayout">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <item>
+               <item row="1" column="5">
+                <widget class="QLabel" name="perHourValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="5">
+                <widget class="QLabel" name="todayPerHourValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="5">
+                <widget class="QLabel" name="totalPerHourValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="6">
+                <widget class="QLabel" name="elapsedCaption">
+                 <property name="text">
+                  <string>Fishing time</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="6">
                 <widget class="QLabel" name="elapsedValue">
                  <property name="text">
                   <string>–</string>
@@ -596,10 +642,50 @@
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QLabel" name="elapsedCaption">
+               <item row="2" column="6">
+                <widget class="QLabel" name="todayElapsedValue">
                  <property name="text">
-                  <string>Time</string>
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="6">
+                <widget class="QLabel" name="totalElapsedValue">
+                 <property name="text">
+                  <string>–</string>
+                 </property>
+                 <property name="statValue" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="sessionLabel">
+                 <property name="text">
+                  <string>Session</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="todayLabel">
+                 <property name="text">
+                  <string>Today</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="totalLabel">
+                 <property name="text">
+                  <string>Total</string>
                  </property>
                  <property name="caption" stdset="0">
                   <bool>true</bool>
@@ -608,57 +694,28 @@
                </item>
               </layout>
              </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="previewGroup">
-            <property name="title">
-             <string>Preview</string>
-            </property>
-            <layout class="QVBoxLayout" name="previewLayout" stretch="1,0">
              <item>
-              <widget class="PreviewView" name="previewView">
-               <property name="toolTip">
-                <string>Check your area and colour before fishing: pink pixels match the bobber colour, the circle is where the bobber would be found</string>
+              <layout class="QHBoxLayout" name="roundsLayout">
+               <property name="spacing">
+                <number>8</number>
                </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="previewInfoLayout">
                <item>
-                <widget class="QLabel" name="previewInfoLabel">
+                <widget class="QLabel" name="roundsLabel">
                  <property name="text">
-                  <string />
+                  <string>Last rounds</string>
+                 </property>
+                 <property name="caption" stdset="0">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
                <item>
-                <spacer name="previewInfoSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint">
-                  <size>
-                   <width>10</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="previewCheck">
-                 <property name="text">
-                  <string>Show</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
+                <widget class="RoundHistory" name="roundHistory">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
                 </widget>
                </item>
@@ -678,10 +735,53 @@
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>130</height>
+                 <height>120</height>
                 </size>
                </property>
               </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="logGroup">
+            <property name="title">
+             <string>Log</string>
+            </property>
+            <layout class="QVBoxLayout" name="logLayout">
+             <item>
+              <widget class="QPlainTextEdit" name="logView">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="maximumBlockCount">
+                <number>500</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="logButtonLayout">
+               <item>
+                <spacer name="logButtonSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint">
+                  <size>
+                   <width>10</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="openConfigFolderButton">
+                 <property name="text">
+                  <string>Open Config/Logs Folder</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -715,14 +815,180 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="compactStatsLabel">
-          <property name="text">
-           <string />
-          </property>
-          <property name="caption" stdset="0">
-           <bool>true</bool>
+         <widget class="RoundHistory" name="compactRoundHistory">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
          </widget>
+        </item>
+        <item>
+         <layout class="QGridLayout" name="compactStatsLayout" columnstretch="1,1,1,1">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item row="0" column="1">
+           <widget class="QLabel" name="compactCaughtCaption">
+            <property name="text">
+             <string>Caught</string>
+            </property>
+            <property name="caption" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="compactRateCaption">
+            <property name="text">
+             <string>Rate</string>
+            </property>
+            <property name="caption" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="compactTimeCaption">
+            <property name="text">
+             <string>Time</string>
+            </property>
+            <property name="caption" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="compactSessionLabel">
+            <property name="text">
+             <string>Session</string>
+            </property>
+            <property name="caption" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="compactSessionCatches">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="compactSessionRate">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLabel" name="compactSessionTime">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="compactTodayLabel">
+            <property name="text">
+             <string>Today</string>
+            </property>
+            <property name="caption" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="compactTodayCatches">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="compactTodayRate">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QLabel" name="compactTodayTime">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="compactTotalLabel">
+            <property name="text">
+             <string>Total</string>
+            </property>
+            <property name="caption" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="compactTotalCatches">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="compactTotalRate">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLabel" name="compactTotalTime">
+            <property name="text">
+             <string>–</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="BiteMeter" name="compactMeter">
@@ -744,12 +1010,17 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PreviewView</class>
+   <class>StatusLed</class>
    <extends>QWidget</extends>
    <header>getthefish.gui.widgets</header>
   </customwidget>
   <customwidget>
    <class>BiteMeter</class>
+   <extends>QWidget</extends>
+   <header>getthefish.gui.widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>RoundHistory</class>
    <extends>QWidget</extends>
    <header>getthefish.gui.widgets</header>
   </customwidget>
